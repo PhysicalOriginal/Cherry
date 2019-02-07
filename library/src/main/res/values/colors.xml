@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ColorDotNormal">#FFFFFF</color>
+    <color name="ColorDotSelected">#2186F3</color>
+    <color name="ColorWrong">#E91E36</color>
+</resources>
