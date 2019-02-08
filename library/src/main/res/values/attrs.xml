@@ -5,8 +5,9 @@
         <attr name="dotNormalColor" format="color"/>
         <attr name="dotSelectedColor" format="color"/>
         <attr name="dotNormalSize" format="dimension"/>
-        <!--todo 是否需要提供选中时的大小-->
+        <attr name="dotSelectedSize" format="dimension"/>
         <attr name="dotSelectedAnimDuration" format="integer"/>
+        <attr name="feedbackEnabled" format="boolean"/>
         <!--todo 后期扩展的时候需要提供多种选种时候的动画效果和路线动画效果-->
         <attr name="pathWidth" format="dimension"/>
         <attr name="wrongColor" format="color"/>

@@ -2,4 +2,5 @@
 <resources>
     <dimen name="dotNormalSize">4dp</dimen>
     <dimen name="pathWidth">2dp</dimen>
+    <dimen name="dotSelectedSize">8dp</dimen>
 </resources>

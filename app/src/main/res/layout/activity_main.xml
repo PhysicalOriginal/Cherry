@@ -2,19 +2,23 @@
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="wrap_content"
-    android:layout_height="100dp"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
     tools:context=".MainActivity">
 
     <com.sixin.library.LockView
-        android:layout_marginStart="100dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:id="@+id/lockView"
+        android:layout_width="250dp"
+        android:layout_height="250dp"
+        android:background="@color/colorAccent"
+        android:padding="30dp"
+        app:dotNormalSize="10dp"
+        app:dotSelectedSize="24dp"
+        app:dotSelectedAnimDuration="150"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        android:background="@color/colorAccent"
-        app:dotNormalSize="100dp"/>
+        />
 
 </android.support.constraint.ConstraintLayout>
