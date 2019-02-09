@@ -4,21 +4,22 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    tools:context=".MainActivity"
+    android:background="#A13C2D2D">
 
     <com.sixin.library.LockView
         android:id="@+id/lockView"
         android:layout_width="250dp"
         android:layout_height="250dp"
-        android:background="@color/colorAccent"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
         android:padding="30dp"
         app:dotNormalSize="10dp"
-        app:dotSelectedSize="24dp"
         app:dotSelectedAnimDuration="150"
+        app:dotSelectedSize="24dp"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        />
+        app:layout_constraintTop_toTopOf="parent" />
 
 </android.support.constraint.ConstraintLayout>

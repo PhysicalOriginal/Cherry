@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.support.v4.view.animation.FastOutSlowInInterpolator;
 import android.support.v4.view.animation.LinearOutSlowInInterpolator;
 import android.util.AttributeSet;
@@ -87,13 +88,37 @@ public class LockView extends View {
      * */
     private Paint mDotPaint;
 
+    /**
+     * 绘制线条路径的画笔
+     * */
+    private Paint mLinePaint;
+
+    /**
+     * 线条路径
+     * */
+    private Path mLinePath;
+
     private Dot[][] mDots;
+    /**
+     * 已经被触摸的点的集合
+     * */
+    private List<Dot> mTouchedDots;
 
     private List<ObjectAnimator> objectAnimators = new ArrayList<>();
 
     public LockView(Context context) {
         this(context, null);
     }
+
+    /**
+     * 是否绘制路径的标志
+     * */
+    private boolean mInvalidatePath;
+    /**
+     * 手指滑动过程中的坐标位置
+     * */
+    private float xInProgress;
+    private float yInProgress;
 
     public LockView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -133,6 +158,17 @@ public class LockView extends View {
         mDotPaint.setAntiAlias(true);
         mDotPaint.setDither(true);
         mDotPaint.setColor(mDotNormalColor);
+        //todo 添加线条颜色属性
+        mLinePath = new Path();
+        //todo 设置线条边缘的形状
+        mLinePaint = new Paint();
+        mLinePaint.setAntiAlias(true);
+        mLinePaint.setDither(true);
+        mLinePaint.setStyle(Paint.Style.STROKE);
+        mLinePaint.setColor(mDotNormalColor);
+        mLinePaint.setStrokeWidth(mPathWidth);
+
+        mTouchedDots = new ArrayList<>();
 
         float radius = mDotNormalSize/2f;
         mDots = new Dot[mDotCount][mDotCount];
@@ -185,12 +221,34 @@ public class LockView extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
+
         for (int i = 0; i < mDotCount; i++) {
             for (int j = 0; j < mDotCount; j++) {
                 float cx = getCx(j);
                 float cy = getCy(i);
                 drawCircle(canvas, cx, cy,mDots[i][j]);
             }
+        }
+
+        if (mInvalidatePath) {
+            float lastX = Float.MIN_VALUE;
+            float lastY = Float.MIN_VALUE;
+            for (int i = 0; i < mTouchedDots.size(); i++) {
+                Dot touchedDot = mTouchedDots.get(i);
+                if (touchedDot != null) {
+                    lastX = getCx(touchedDot.getColumn());
+                    lastY = getCy(touchedDot.getRow());
+                }
+            }
+            Log.d(TAG, lastX + "\n" + lastY+"\n"+xInProgress+"\n"+yInProgress);
+            if (lastX == Float.MIN_VALUE || lastY == Float.MIN_VALUE) {
+                return;
+            }
+            mLinePath.rewind();
+            mLinePath.moveTo(lastX, lastY);
+            mLinePath.lineTo(xInProgress,yInProgress);
+            canvas.drawPath(mLinePath,mLinePaint);
+
         }
     }
 
@@ -216,17 +274,33 @@ public class LockView extends View {
             case MotionEvent.ACTION_DOWN:
                 handleActionDown(event);
                 return true;
+            case MotionEvent.ACTION_MOVE:
+                handleActionMove(event);
+                return true;
         }
         return false;
     }
 
+    private void handleActionMove(MotionEvent event) {
+        xInProgress = event.getX();
+        yInProgress = event.getY();
+        invalidate();
+    }
+
     private void handleActionDown(MotionEvent event) {
-        Dot dot = getTouchedDot(event.getX(), event.getY());
+        float xDown = event.getX();
+        float yDown = event.getY();
+        Dot dot = getTouchDot(xDown, yDown);
         if (dot != null) {
+            mInvalidatePath = true;
+            xInProgress = xDown;
+            yInProgress = yDown;
             startScaleAnimation(dot);
             if (mFeedbackEnabled) {
                 performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY, HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING|HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING);
             }
+        }else{
+            mInvalidatePath = false;
         }
     }
 
@@ -259,7 +333,7 @@ public class LockView extends View {
      * @param y 手指按下的纵坐标
      * @return 点的对象，可能为空
      * */
-    private Dot getTouchedDot(float x, float y) {
+    private Dot getTouchDot(float x, float y) {
         int row = getRow(y);
         int column = getColumn(x);
         if (row < 0 || column < 0) {
@@ -276,6 +350,7 @@ public class LockView extends View {
             boolean xInArea = x >= (cx - radius) && x <= (cx + radius);
             boolean yInArea = y >= (cy - radius) && y <= (cy + radius);
             if (xInArea && yInArea) {
+                addToTouchedDots(mDots[row][column]);
                 return mDots[row][column];
             }else{
                 return null;
@@ -284,10 +359,26 @@ public class LockView extends View {
             boolean xInArea = x >= (cx - responseAreaWidthHalf) && x <= (cx + responseAreaWidthHalf);
             boolean yInArea = y >= (cy - responseAreaHeightHalf) && y <= (cy + responseAreaHeightHalf);
             if (xInArea && yInArea) {
+                addToTouchedDots(mDots[row][column]);
                 return mDots[row][column];
             }else{
                 return null;
             }
+        }
+    }
+
+    /**
+     * 将触摸的点添加到集合中
+     * @param dot 被触摸的点
+     * */
+    private void addToTouchedDots(Dot dot) {
+        if (dot != null) {
+            for (Dot d : mTouchedDots) {
+                if (dot == d) {
+                   return;
+                }
+            }
+            mTouchedDots.add(dot);
         }
     }
 
