@@ -115,6 +115,10 @@ public class LockView extends View {
      * */
     private boolean mInvalidatePath;
     /**
+     * 是否在绘制过程中
+     * */
+    private boolean mInvalidateProgress;
+    /**
      * 手指滑动过程中的坐标位置
      * */
     private float xInProgress;
@@ -221,7 +225,7 @@ public class LockView extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
-
+        //todo 这个部分无限制的循环绘制，能不能控制绘制次数
         for (int i = 0; i < mDotCount; i++) {
             for (int j = 0; j < mDotCount; j++) {
                 float cx = getCx(j);
@@ -231,24 +235,36 @@ public class LockView extends View {
         }
 
         if (mInvalidatePath) {
-            float lastX = Float.MIN_VALUE;
-            float lastY = Float.MIN_VALUE;
+            float lastX = -1f;
+            float lastY = -1f;
+
+            if (mTouchedDots.size() == 0) {
+                return;
+            }
+
             for (int i = 0; i < mTouchedDots.size(); i++) {
                 Dot touchedDot = mTouchedDots.get(i);
                 if (touchedDot != null) {
-                    lastX = getCx(touchedDot.getColumn());
-                    lastY = getCy(touchedDot.getRow());
+                    float cX = getCx(touchedDot.getColumn());
+                    float cY = getCy(touchedDot.getRow());
+                    if(i != 0){
+                        //todo rewind这个能够提高性能，是怎么提高的，自己写的代码自己没看懂是怎么回事
+                        mLinePath.rewind();
+                        mLinePath.moveTo(lastX,lastY);
+                        mLinePath.lineTo(cX,cY);
+                        canvas.drawPath(mLinePath,mLinePaint);
+                    }
+                    lastX = cX;
+                    lastY = cY;
                 }
             }
-            Log.d(TAG, lastX + "\n" + lastY+"\n"+xInProgress+"\n"+yInProgress);
-            if (lastX == Float.MIN_VALUE || lastY == Float.MIN_VALUE) {
-                return;
-            }
-            mLinePath.rewind();
-            mLinePath.moveTo(lastX, lastY);
-            mLinePath.lineTo(xInProgress,yInProgress);
-            canvas.drawPath(mLinePath,mLinePaint);
 
+            if (mInvalidateProgress) {
+                mLinePath.rewind();
+                mLinePath.moveTo(lastX, lastY);
+                mLinePath.lineTo(xInProgress,yInProgress);
+                canvas.drawPath(mLinePath,mLinePaint);
+            }
         }
     }
 
@@ -277,28 +293,58 @@ public class LockView extends View {
             case MotionEvent.ACTION_MOVE:
                 handleActionMove(event);
                 return true;
+            case MotionEvent.ACTION_UP:
+                handleActionUp(event);
+                return true;
         }
         return false;
     }
 
+    private void handleActionUp(MotionEvent event) {
+        if (!mTouchedDots.isEmpty()) {
+            mInvalidateProgress = false;
+            invalidate();
+        }else{
+            //todo 考察else的情况
+        }
+    }
+
     private void handleActionMove(MotionEvent event) {
-        xInProgress = event.getX();
-        yInProgress = event.getY();
+        mInvalidatePath = true;
+        mInvalidateProgress = true;
+
+        float xProgress = event.getX();
+        float yProgress = event.getY();
+        Dot dot = touchDotAndFeedback(xProgress, yProgress);
+        xInProgress = xProgress;
+        yInProgress = yProgress;
+        //todo 这段代码可以优化
         invalidate();
+    }
+
+    private Dot touchDotAndFeedback(float xProgress, float yProgress) {
+        Dot dot = getTouchDot(xProgress, yProgress);
+        if (dot != null && !dot.isAnim()) {
+            dot.setAnim(true);
+            startScaleAnimation(dot);
+            if (mFeedbackEnabled) {
+                performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY, HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING | HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING);
+            }
+        }
+        return dot;
     }
 
     private void handleActionDown(MotionEvent event) {
         float xDown = event.getX();
         float yDown = event.getY();
-        Dot dot = getTouchDot(xDown, yDown);
+        Dot dot = touchDotAndFeedback(xDown, yDown);
+
         if (dot != null) {
             mInvalidatePath = true;
             xInProgress = xDown;
             yInProgress = yDown;
-            startScaleAnimation(dot);
-            if (mFeedbackEnabled) {
-                performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY, HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING|HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING);
-            }
+            //todo 这段代码可以优化
+            invalidate();
         }else{
             mInvalidatePath = false;
         }
@@ -434,6 +480,7 @@ public class LockView extends View {
         private int row;
         private int column;
         private float radius;
+        private boolean isAnim;
 
         Dot(int row, int column,float radius) {
             this.row = row;
@@ -455,6 +502,14 @@ public class LockView extends View {
 
         public void setRadius(float radius) {
             this.radius = radius;
+        }
+
+        public boolean isAnim() {
+            return isAnim;
+        }
+
+        public void setAnim(boolean anim) {
+            isAnim = anim;
         }
     }
 }
