@@ -17,6 +17,7 @@
         app:dotNormalSize="10dp"
         app:dotSelectedAnimDuration="150"
         app:dotSelectedSize="24dp"
+        app:dotCount="6"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

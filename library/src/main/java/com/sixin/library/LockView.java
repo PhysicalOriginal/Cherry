@@ -7,6 +7,8 @@ import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.Rect;
+import android.graphics.RectF;
 import android.support.v4.view.animation.FastOutSlowInInterpolator;
 import android.support.v4.view.animation.LinearOutSlowInInterpolator;
 import android.util.AttributeSet;
@@ -123,6 +125,9 @@ public class LockView extends View {
      * */
     private float xInProgress;
     private float yInProgress;
+
+    private Rect mTempInvalidateRect = new Rect();
+    private Rect mInvalidateRect = new Rect();
 
     public LockView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -248,7 +253,7 @@ public class LockView extends View {
                     float cX = getCx(touchedDot.getColumn());
                     float cY = getCy(touchedDot.getRow());
                     if(i != 0){
-                        //todo rewind这个能够提高性能，是怎么提高的，自己写的代码自己没看懂是怎么回事
+                        //rewind提高性能
                         mLinePath.rewind();
                         mLinePath.moveTo(lastX,lastY);
                         mLinePath.lineTo(cX,cY);
@@ -311,19 +316,69 @@ public class LockView extends View {
 
     private void handleActionMove(MotionEvent event) {
         mInvalidatePath = true;
-        mInvalidateProgress = true;
+        boolean invalidate = false;
+        mTempInvalidateRect.setEmpty();
+        int historySize = event.getHistorySize();
+        for (int i = 0; i < historySize + 1; i++) {
+            float eventX = i < historySize ? event.getHistoricalX(i) : event.getX();
+            float eventY = i < historySize ? event.getHistoricalY(i) : event.getY();
+            Dot dot = touchDotAndFeedback(eventX, eventY);
+            int touchedDotSize = mTouchedDots.size();
+            if (dot != null && touchedDotSize == 1) {
+                mInvalidateProgress = true;
+            }
 
-        float xProgress = event.getX();
-        float yProgress = event.getY();
-        Dot dot = touchDotAndFeedback(xProgress, yProgress);
-        xInProgress = xProgress;
-        yInProgress = yProgress;
-        //todo 这段代码可以优化
-        invalidate();
+            float dX = Math.abs(eventX - xInProgress);
+            float dY = Math.abs(eventY - yInProgress);
+
+            if (dX > 0.0f || dY > 0.0f) {
+                invalidate = true;
+            }
+
+            if (mInvalidateProgress && touchedDotSize > 0) {
+                Dot lastDot = mTouchedDots.get(touchedDotSize - 1);
+                float lastCx = getCx(lastDot.getColumn());
+                float lastCy = getCy(lastDot.getRow());
+                //todo 做一个实验如果不加mPathWidth，绘制的线条会不会变形
+                float left = Math.min(lastCx,eventX) - mPathWidth;
+                float right = Math.max(lastCx,eventX) + mPathWidth;
+                float top = Math.min(lastCy,eventY) - mPathWidth;
+                float bottom = Math.max(lastCy,eventY) + mPathWidth;
+
+                //todo 这段代码什么意思
+                if (dot != null) {
+                    float gridWidthHalf = mGridWidth / 2.0f;
+                    float gridHeightHalf = mGridHeight / 2.0f;
+                    float cX = getCx(dot.getColumn());
+                    float cY = getCy(dot.getRow());
+                    left = Math.min(cX - gridWidthHalf, left);
+                    right = Math.max(cX + gridWidthHalf, right);
+                    top = Math.min(cY - gridHeightHalf, top);
+                    bottom = Math.max(cY + gridHeightHalf, bottom);
+                }
+
+                mTempInvalidateRect.union(Math.round(left),Math.round(top),Math.round(right),Math.round(bottom));
+            }
+        }
+        xInProgress = event.getX();
+        yInProgress = event.getY();
+
+        if (invalidate) {
+            mInvalidateRect.union(mTempInvalidateRect);
+            invalidate(mInvalidateRect);
+            //todo 这段代码是不是有问题
+            mInvalidateRect.set(mTempInvalidateRect);
+           //todo  打印矩形区域,看对union的理解是否正确
+        }
     }
 
     private Dot touchDotAndFeedback(float xProgress, float yProgress) {
         Dot dot = getTouchDot(xProgress, yProgress);
+
+        if (dot != null && dot.isAnim()) {
+            return null;
+        }
+
         if (dot != null && !dot.isAnim()) {
             dot.setAnim(true);
             startScaleAnimation(dot);
@@ -331,6 +386,7 @@ public class LockView extends View {
                 performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY, HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING | HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING);
             }
         }
+
         return dot;
     }
 
@@ -338,16 +394,9 @@ public class LockView extends View {
         float xDown = event.getX();
         float yDown = event.getY();
         Dot dot = touchDotAndFeedback(xDown, yDown);
-
-        if (dot != null) {
-            mInvalidatePath = true;
-            xInProgress = xDown;
-            yInProgress = yDown;
-            //todo 这段代码可以优化
-            invalidate();
-        }else{
-            mInvalidatePath = false;
-        }
+        mInvalidateProgress = dot != null;
+        xInProgress = xDown;
+        yInProgress = yDown;
     }
 
     private void startScaleAnimation(final Dot dot) {
