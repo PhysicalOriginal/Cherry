@@ -315,13 +315,16 @@ public class LockView extends View {
     }
 
     private void handleActionMove(MotionEvent event) {
+        Log.d(TAG, "---------begin---------");
         mInvalidatePath = true;
         boolean invalidate = false;
         mTempInvalidateRect.setEmpty();
         int historySize = event.getHistorySize();
+        Log.d(TAG, "historySize:" + historySize);
         for (int i = 0; i < historySize + 1; i++) {
             float eventX = i < historySize ? event.getHistoricalX(i) : event.getX();
             float eventY = i < historySize ? event.getHistoricalY(i) : event.getY();
+            Log.d(TAG, "eventX:" + eventX + " eventY:" + eventY);
             Dot dot = touchDotAndFeedback(eventX, eventY);
             int touchedDotSize = mTouchedDots.size();
             if (dot != null && touchedDotSize == 1) {
@@ -330,7 +333,7 @@ public class LockView extends View {
 
             float dX = Math.abs(eventX - xInProgress);
             float dY = Math.abs(eventY - yInProgress);
-
+            Log.d(TAG, "dX:" + dX + " dy:" + dY);
             if (dX > 0.0f || dY > 0.0f) {
                 invalidate = true;
             }
@@ -344,7 +347,12 @@ public class LockView extends View {
                 float right = Math.max(lastCx,eventX) + mPathWidth;
                 float top = Math.min(lastCy,eventY) - mPathWidth;
                 float bottom = Math.max(lastCy,eventY) + mPathWidth;
-
+//                float left = Math.min(lastCx,eventX);
+//                float right = Math.max(lastCx,eventX);
+//                float top = Math.min(lastCy,eventY);
+//                float bottom = Math.max(lastCy,eventY);
+                Log.d(TAG, "lastCx:" + lastCx + " lastCy:" + lastCy);
+                Log.d(TAG, "left:" + left + " right:" + right + " top:" + top + " bottom:" + bottom);
                 //todo 这段代码什么意思
                 if (dot != null) {
                     float gridWidthHalf = mGridWidth / 2.0f;
@@ -358,6 +366,8 @@ public class LockView extends View {
                 }
 
                 mTempInvalidateRect.union(Math.round(left),Math.round(top),Math.round(right),Math.round(bottom));
+                Log.d(TAG, "mTempInvalidateRect:" + mTempInvalidateRect.left + "\n" + mTempInvalidateRect.right + "\n"
+                        + mTempInvalidateRect.top + "\n" + mTempInvalidateRect.bottom);
             }
         }
         xInProgress = event.getX();
@@ -365,10 +375,12 @@ public class LockView extends View {
 
         if (invalidate) {
             mInvalidateRect.union(mTempInvalidateRect);
+            Log.d(TAG, "mInvalidateRect:" + mInvalidateRect.left + "\n" + mInvalidateRect.right + "\n"
+                    + mInvalidateRect.top + "\n" + mInvalidateRect.bottom);
             invalidate(mInvalidateRect);
-            //todo 这段代码是不是有问题
-            mInvalidateRect.set(mTempInvalidateRect);
-           //todo  打印矩形区域,看对union的理解是否正确
+            Log.d(TAG, "mInvalidateRect111111111:" + mInvalidateRect.left + "\n" + mInvalidateRect.right + "\n"
+                    + mInvalidateRect.top + "\n" + mInvalidateRect.bottom);
+            Log.d(TAG, "---------end---------");
         }
     }
 
