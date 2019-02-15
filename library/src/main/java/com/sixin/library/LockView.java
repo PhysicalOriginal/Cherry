@@ -32,6 +32,7 @@ public class LockView extends View {
     //默认点被选中时的动画周期
     private static final int S_DEFAULT_DOT_SELECTED_ANIM_DURATION = 1500;
     //todo 该变量暂时不作为属性向外抛
+    //todo 完善方法的文档说明
     private static final float S_GRID_SCALE_FACTOR = 0.6f;
     /**
      * 点的个数，LockView中点的总数是mDotCount*mDotCount;
@@ -169,11 +170,12 @@ public class LockView extends View {
         mDotPaint.setColor(mDotNormalColor);
         //todo 添加线条颜色属性
         mLinePath = new Path();
-        //todo 设置线条边缘的形状
         mLinePaint = new Paint();
         mLinePaint.setAntiAlias(true);
         mLinePaint.setDither(true);
         mLinePaint.setStyle(Paint.Style.STROKE);
+        mLinePaint.setStrokeJoin(Paint.Join.ROUND);
+        mLinePaint.setStrokeCap(Paint.Cap.ROUND);
         mLinePaint.setColor(mDotNormalColor);
         mLinePaint.setStrokeWidth(mPathWidth);
 
@@ -306,26 +308,39 @@ public class LockView extends View {
     }
 
     private void handleActionUp(MotionEvent event) {
+        //todo 考察所有成员变量的重置问题，以及调用方法的检查
         if (!mTouchedDots.isEmpty()) {
             mInvalidateProgress = false;
+            resetDots();
             invalidate();
         }else{
             //todo 考察else的情况
         }
     }
 
+    private void resetDots() {
+        if (mDots != null && mDots.length > 0) {
+            int row = mDots.length;
+            int column = row;
+            for (int i = 0; i < row; i++) {
+                for (int j = 0; j < column; j++) {
+                    mDots[i][j].setAnim(false);
+                }
+            }
+        }
+    }
+
     private void handleActionMove(MotionEvent event) {
-        Log.d(TAG, "---------begin---------");
         mInvalidatePath = true;
         boolean invalidate = false;
         mTempInvalidateRect.setEmpty();
         int historySize = event.getHistorySize();
-        Log.d(TAG, "historySize:" + historySize);
+
         for (int i = 0; i < historySize + 1; i++) {
             float eventX = i < historySize ? event.getHistoricalX(i) : event.getX();
             float eventY = i < historySize ? event.getHistoricalY(i) : event.getY();
-            Log.d(TAG, "eventX:" + eventX + " eventY:" + eventY);
             Dot dot = touchDotAndFeedback(eventX, eventY);
+
             int touchedDotSize = mTouchedDots.size();
             if (dot != null && touchedDotSize == 1) {
                 mInvalidateProgress = true;
@@ -333,7 +348,6 @@ public class LockView extends View {
 
             float dX = Math.abs(eventX - xInProgress);
             float dY = Math.abs(eventY - yInProgress);
-            Log.d(TAG, "dX:" + dX + " dy:" + dY);
             if (dX > 0.0f || dY > 0.0f) {
                 invalidate = true;
             }
@@ -342,18 +356,11 @@ public class LockView extends View {
                 Dot lastDot = mTouchedDots.get(touchedDotSize - 1);
                 float lastCx = getCx(lastDot.getColumn());
                 float lastCy = getCy(lastDot.getRow());
-                //todo 做一个实验如果不加mPathWidth，绘制的线条会不会变形
                 float left = Math.min(lastCx,eventX) - mPathWidth;
                 float right = Math.max(lastCx,eventX) + mPathWidth;
                 float top = Math.min(lastCy,eventY) - mPathWidth;
                 float bottom = Math.max(lastCy,eventY) + mPathWidth;
-//                float left = Math.min(lastCx,eventX);
-//                float right = Math.max(lastCx,eventX);
-//                float top = Math.min(lastCy,eventY);
-//                float bottom = Math.max(lastCy,eventY);
-                Log.d(TAG, "lastCx:" + lastCx + " lastCy:" + lastCy);
-                Log.d(TAG, "left:" + left + " right:" + right + " top:" + top + " bottom:" + bottom);
-                //todo 这段代码什么意思
+
                 if (dot != null) {
                     float gridWidthHalf = mGridWidth / 2.0f;
                     float gridHeightHalf = mGridHeight / 2.0f;
@@ -366,8 +373,6 @@ public class LockView extends View {
                 }
 
                 mTempInvalidateRect.union(Math.round(left),Math.round(top),Math.round(right),Math.round(bottom));
-                Log.d(TAG, "mTempInvalidateRect:" + mTempInvalidateRect.left + "\n" + mTempInvalidateRect.right + "\n"
-                        + mTempInvalidateRect.top + "\n" + mTempInvalidateRect.bottom);
             }
         }
         xInProgress = event.getX();
@@ -375,12 +380,8 @@ public class LockView extends View {
 
         if (invalidate) {
             mInvalidateRect.union(mTempInvalidateRect);
-            Log.d(TAG, "mInvalidateRect:" + mInvalidateRect.left + "\n" + mInvalidateRect.right + "\n"
-                    + mInvalidateRect.top + "\n" + mInvalidateRect.bottom);
+            //todo 该方法已经过时
             invalidate(mInvalidateRect);
-            Log.d(TAG, "mInvalidateRect111111111:" + mInvalidateRect.left + "\n" + mInvalidateRect.right + "\n"
-                    + mInvalidateRect.top + "\n" + mInvalidateRect.bottom);
-            Log.d(TAG, "---------end---------");
         }
     }
 
@@ -403,12 +404,21 @@ public class LockView extends View {
     }
 
     private void handleActionDown(MotionEvent event) {
+        resetTouchedDots();
         float xDown = event.getX();
         float yDown = event.getY();
         Dot dot = touchDotAndFeedback(xDown, yDown);
+        mInvalidatePath = false;
         mInvalidateProgress = dot != null;
         xInProgress = xDown;
         yInProgress = yDown;
+        invalidate();
+    }
+
+    private void resetTouchedDots() {
+        if (!mTouchedDots.isEmpty()) {
+            mTouchedDots.clear();
+        }
     }
 
     private void startScaleAnimation(final Dot dot) {
