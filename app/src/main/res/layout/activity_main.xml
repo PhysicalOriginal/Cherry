@@ -7,20 +7,24 @@
     tools:context=".MainActivity"
     android:background="#A13C2D2D">
 
-    <com.sixin.library.LockView
-        android:id="@+id/lockView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
-        android:padding="30dp"
-        app:dotNormalSize="10dp"
-        app:dotSelectedAnimDuration="150"
-        app:dotSelectedSize="24dp"
-        app:dotCount="3"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+
+        <com.sixin.library.LockView
+            android:id="@+id/lockView"
+            android:layout_width="300dp"
+            android:layout_height="300dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="8dp"
+            android:padding="30dp"
+            app:dotNormalSize="10dp"
+            app:dotSelectedAnimDuration="15000"
+            app:dotSelectedSize="24dp"
+            app:dotCount="3"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            />
+
+
 
 </android.support.constraint.ConstraintLayout>
