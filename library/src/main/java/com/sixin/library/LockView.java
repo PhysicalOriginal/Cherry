@@ -109,10 +109,6 @@ public class LockView extends View {
 
     private List<ObjectAnimator> objectAnimators = new ArrayList<>();
 
-    public LockView(Context context) {
-        this(context, null);
-    }
-
     /**
      * 是否绘制路径的标志
      * */
@@ -129,6 +125,11 @@ public class LockView extends View {
 
     private Rect mTempInvalidateRect = new Rect();
     private Rect mInvalidateRect = new Rect();
+
+    public LockView(Context context) {
+        this(context, null);
+    }
+
 
     public LockView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -233,6 +234,7 @@ public class LockView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         //todo 这个部分无限制的循环绘制，能不能控制绘制次数
+        //todo path有rewind能提高性能，drawCricle有没有类似提高性能的API
         for (int i = 0; i < mDotCount; i++) {
             for (int j = 0; j < mDotCount; j++) {
                 float cx = getCx(j);
@@ -303,18 +305,25 @@ public class LockView extends View {
             case MotionEvent.ACTION_UP:
                 handleActionUp(event);
                 return true;
+            //描述一次事件流被中断
+            //当手指触摸屏幕的过程中，息屏
+            //当控件收到前驱事件（什么叫前驱事件？一个从DOWN一直到UP的所有事件组合称为完整的手势，中间的任
+            // 意一次事件对于下一个事件而言就是它的前驱事件）之后，后面的事件如果被父控件拦截
+            // ，那么当前控件就会收到一个CANCEL事件
+            case MotionEvent.ACTION_CANCEL:
+                handleActionUp(event);
+                return true;
         }
         return false;
     }
 
     private void handleActionUp(MotionEvent event) {
-        //todo 考察所有成员变量的重置问题，以及调用方法的检查
         if (!mTouchedDots.isEmpty()) {
             mInvalidateProgress = false;
+            mInvalidateRect.setEmpty();
+            cancelDotAnim();
             resetDots();
             invalidate();
-        }else{
-            //todo 考察else的情况
         }
     }
 
@@ -324,7 +333,9 @@ public class LockView extends View {
             int column = row;
             for (int i = 0; i < row; i++) {
                 for (int j = 0; j < column; j++) {
-                    mDots[i][j].setAnim(false);
+                    Dot dot = mDots[i][j];
+                    dot.setAnim(false);
+                    dot.setRadius(mDotNormalSize/2f);
                 }
             }
         }
@@ -535,12 +546,20 @@ public class LockView extends View {
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         //取消动画
-        for (ObjectAnimator objectAnimator : objectAnimators) {
-            if (objectAnimator != null && objectAnimator.isRunning()) {
-                objectAnimator.cancel();
-            }
-        }
+        cancelDotAnim();
         //todo 考察在这其中还需要释放那些资源
+    }
+
+    private void cancelDotAnim() {
+        if(!objectAnimators.isEmpty()){
+            for (ObjectAnimator objectAnimator : objectAnimators) {
+                if (objectAnimator != null && objectAnimator.isRunning()) {
+                    objectAnimator.cancel();
+                }
+            }
+            objectAnimators.clear();
+        }
+
     }
 
     /**
