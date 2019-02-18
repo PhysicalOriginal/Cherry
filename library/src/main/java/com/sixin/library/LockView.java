@@ -9,6 +9,7 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.support.annotation.IntRange;
 import android.support.v4.view.animation.FastOutSlowInInterpolator;
 import android.support.v4.view.animation.LinearOutSlowInInterpolator;
 import android.util.AttributeSet;
@@ -182,6 +183,10 @@ public class LockView extends View {
 
         mTouchedDots = new ArrayList<>();
 
+        initDots();
+    }
+
+    private void initDots() {
         float radius = mDotNormalSize/2f;
         mDots = new Dot[mDotCount][mDotCount];
         for (int i = 0; i < mDotCount; i++) {
@@ -191,8 +196,29 @@ public class LockView extends View {
         }
     }
 
+    public int getDotCount() {
+        return mDotCount;
+    }
+    //todo 考察开发者在任意地方调用该代码
+    //1:在onCreate实例化之后调用
+    //2：在回调接口中调用  绘制了若干次，再按按钮
+    //todo 在碎片和activity的生命周期中回调
+    /**
+     * 设置LockView每行点的个数
+     * @param dotCount 每行点的个数，注意使用了@IntRange限制了dotCount的大小。dotCount在0到9范围内
+     * */
+    public void setDotCount(@IntRange(from =0,to = 9) int dotCount) {
+        this.mDotCount = dotCount;
+        mDots = null;
+        initDots();
+        //todo 什么情况下requestLayout不进行重绘
+//        requestLayout();
+        invalidate();
+    }
+
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        Log.d(TAG, "onMeasure");
         super.onMeasure(resolveMeasureSpec(widthMeasureSpec), resolveMeasureSpec(heightMeasureSpec));
     }
 
@@ -214,7 +240,28 @@ public class LockView extends View {
     }
 
     @Override
+    public void layout(int l, int t, int r, int b) {
+        super.layout(l, t, r, b);
+
+//        int adjustWidth = getWidth() - getPaddingStart() - getPaddingEnd();
+//        int adjustHeight = getHeight() - getPaddingTop() - getPaddingBottom();
+//        mGridWidth = adjustWidth / (float)mDotCount;
+//        mGridHeight = adjustHeight / (float)mDotCount;
+//
+//        float limitValue = Math.min(mGridHeight, mGridWidth);
+//        //todo 该异常提示不够清晰，需要重新提示
+//        if (mDotNormalSize > limitValue) {
+//            throw new IllegalArgumentException("Points are smaller than the shortest edge of a rectangle");
+//        }
+//        //todo 该异常提示不够清晰，需要重新提示
+//        if (mDotSelectedSize > limitValue) {
+//            throw new IllegalArgumentException("Points are smaller than the shortest edge of a rectangle");
+//        }
+    }
+
+    @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+//        Log.d(TAG, "onSizeChanged");
         int adjustWidth = w - getPaddingStart() - getPaddingEnd();
         int adjustHeight = h - getPaddingTop() - getPaddingBottom();
         mGridWidth = adjustWidth / (float)mDotCount;
@@ -233,6 +280,7 @@ public class LockView extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
+        Log.d(TAG, "onDraw"+mDots.length+mDotCount);
         //todo 这个部分无限制的循环绘制，能不能控制绘制次数
         //todo path有rewind能提高性能，drawCricle有没有类似提高性能的API
         for (int i = 0; i < mDotCount; i++) {
