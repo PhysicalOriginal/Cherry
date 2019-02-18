@@ -26,6 +26,7 @@ public class LockView extends View {
     //todo 当通过纯java代码创建该view对象的时候，也能够实现UI效果
     //TODO lOG日志最后全部撤销
     //TODO 提供get set方法 当提供这些方法后因为内部数据可能没有同步更新，会出现很多的bug.
+    //todo 目前点的位置的计算方式对于开发者而言可能不友好，尤其定制化UI时存在很大问题，无法变动位置
     private static final String TAG = "LockView";
 
     //默认点的个数
@@ -211,18 +212,24 @@ public class LockView extends View {
         this.mDotCount = dotCount;
         mDots = null;
         initDots();
+        mInvalidatePath = false;
+        mInvalidateProgress = false;
+        if(mTouchedDots != null){
+            mTouchedDots.clear();
+        }
+        cancelDotAnim();
         //todo 什么情况下requestLayout不进行重绘
-//        requestLayout();
+        requestLayout();
         invalidate();
     }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        Log.d(TAG, "onMeasure");
-        super.onMeasure(resolveMeasureSpec(widthMeasureSpec), resolveMeasureSpec(heightMeasureSpec));
+        super.onMeasure(resolveMeasureSpec(widthMeasureSpec,getPaddingStart()+getPaddingEnd())
+                , resolveMeasureSpec(heightMeasureSpec,getPaddingTop()+getPaddingBottom()));
     }
 
-    private int resolveMeasureSpec(int measureSpec) {
+    private int resolveMeasureSpec(int measureSpec,int padding) {
         int newMeasureSpec = measureSpec;
         int specMode = MeasureSpec.getMode(measureSpec);
         int specSize = MeasureSpec.getSize(measureSpec);
@@ -233,7 +240,7 @@ public class LockView extends View {
                 newMeasureSpec = measureSpec;
                 break;
             case MeasureSpec.AT_MOST:
-                newMeasureSpec = MeasureSpec.makeMeasureSpec(mDotNormalSize * mDotCount, specMode);
+                newMeasureSpec = MeasureSpec.makeMeasureSpec(mDotNormalSize * mDotCount+padding, specMode);
                 break;
         }
         return newMeasureSpec;
@@ -243,27 +250,8 @@ public class LockView extends View {
     public void layout(int l, int t, int r, int b) {
         super.layout(l, t, r, b);
 
-//        int adjustWidth = getWidth() - getPaddingStart() - getPaddingEnd();
-//        int adjustHeight = getHeight() - getPaddingTop() - getPaddingBottom();
-//        mGridWidth = adjustWidth / (float)mDotCount;
-//        mGridHeight = adjustHeight / (float)mDotCount;
-//
-//        float limitValue = Math.min(mGridHeight, mGridWidth);
-//        //todo 该异常提示不够清晰，需要重新提示
-//        if (mDotNormalSize > limitValue) {
-//            throw new IllegalArgumentException("Points are smaller than the shortest edge of a rectangle");
-//        }
-//        //todo 该异常提示不够清晰，需要重新提示
-//        if (mDotSelectedSize > limitValue) {
-//            throw new IllegalArgumentException("Points are smaller than the shortest edge of a rectangle");
-//        }
-    }
-
-    @Override
-    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-//        Log.d(TAG, "onSizeChanged");
-        int adjustWidth = w - getPaddingStart() - getPaddingEnd();
-        int adjustHeight = h - getPaddingTop() - getPaddingBottom();
+        int adjustWidth = getWidth() - getPaddingStart() - getPaddingEnd();
+        int adjustHeight = getHeight() - getPaddingTop() - getPaddingBottom();
         mGridWidth = adjustWidth / (float)mDotCount;
         mGridHeight = adjustHeight / (float)mDotCount;
 
@@ -279,8 +267,26 @@ public class LockView extends View {
     }
 
     @Override
+    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+//        Log.d(TAG, "onSizeChanged");
+//        int adjustWidth = w - getPaddingStart() - getPaddingEnd();
+//        int adjustHeight = h - getPaddingTop() - getPaddingBottom();
+//        mGridWidth = adjustWidth / (float)mDotCount;
+//        mGridHeight = adjustHeight / (float)mDotCount;
+//
+//        float limitValue = Math.min(mGridHeight, mGridWidth);
+//        //todo 该异常提示不够清晰，需要重新提示
+//        if (mDotNormalSize > limitValue) {
+//            throw new IllegalArgumentException("Points are smaller than the shortest edge of a rectangle");
+//        }
+//        //todo 该异常提示不够清晰，需要重新提示
+//        if (mDotSelectedSize > limitValue) {
+//            throw new IllegalArgumentException("Points are smaller than the shortest edge of a rectangle");
+//        }
+    }
+
+    @Override
     protected void onDraw(Canvas canvas) {
-        Log.d(TAG, "onDraw"+mDots.length+mDotCount);
         //todo 这个部分无限制的循环绘制，能不能控制绘制次数
         //todo path有rewind能提高性能，drawCricle有没有类似提高性能的API
         for (int i = 0; i < mDotCount; i++) {
@@ -359,6 +365,7 @@ public class LockView extends View {
             // 意一次事件对于下一个事件而言就是它的前驱事件）之后，后面的事件如果被父控件拦截
             // ，那么当前控件就会收到一个CANCEL事件
             case MotionEvent.ACTION_CANCEL:
+                Log.d(TAG, "onCancel");
                 handleActionUp(event);
                 return true;
         }
