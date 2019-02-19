@@ -21,11 +21,40 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         final LockView lockView = findViewById(R.id.lockView);
         final Button button = findViewById(R.id.button);
+        lockView.setLockViewListener(new LockView.LockViewListener() {
+            @Override
+            public void onStart(int dotValue) {
+                Log.d(TAG, "onStart:" + dotValue);
+            }
+
+            @Override
+            public void onProgress(int progressValue) {
+                Log.d(TAG, "onProgress:" + progressValue);
+            }
+
+            @Override
+            public void onComplete(int[] result) {
+                for (int i = 0; i < result.length; i++) {
+                    Log.d(TAG, "onComplete:"+result[i]);
+                }
+            }
+
+            @Override
+            public void onCancel() {
+                Log.d(TAG, "onCancel");
+            }
+        });
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 lockView.setDotCount(5);
             }
         });
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        App.getRefWatcher(getApplicationContext()).watch(this);
     }
 }

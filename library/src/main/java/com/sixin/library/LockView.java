@@ -128,6 +128,8 @@ public class LockView extends View {
     private Rect mTempInvalidateRect = new Rect();
     private Rect mInvalidateRect = new Rect();
 
+    private LockViewListener mLockViewListener;
+
     public LockView(Context context) {
         this(context, null);
     }
@@ -190,9 +192,10 @@ public class LockView extends View {
     private void initDots() {
         float radius = mDotNormalSize/2f;
         mDots = new Dot[mDotCount][mDotCount];
+        int dotValue =0;
         for (int i = 0; i < mDotCount; i++) {
             for (int j = 0; j < mDotCount; j++) {
-                mDots[i][j] = new Dot(i,j,radius);
+                mDots[i][j] = new Dot(i,j,radius,++dotValue);
             }
         }
     }
@@ -221,6 +224,16 @@ public class LockView extends View {
         //todo 什么情况下requestLayout不进行重绘
         requestLayout();
         invalidate();
+    }
+
+    public LockViewListener getLockViewListener() {
+        return mLockViewListener;
+    }
+
+    //todo 设置监听器后的内存泄漏测试,去掉detach中的内容测试
+    public void setLockViewListener(LockViewListener lockViewListener) {
+        clearListener();
+        this.mLockViewListener = lockViewListener;
     }
 
     @Override
@@ -357,6 +370,16 @@ public class LockView extends View {
                 handleActionMove(event);
                 return true;
             case MotionEvent.ACTION_UP:
+                if(!mTouchedDots.isEmpty()){
+                    int count = mTouchedDots.size();
+                    int[] result = new int[count];
+                    for (int i = 0; i < count; i++) {
+                        result[i] = mTouchedDots.get(i).getDotValue();
+                    }
+                    if (mLockViewListener != null) {
+                        mLockViewListener.onComplete(result);
+                    }
+                }
                 handleActionUp(event);
                 return true;
             //描述一次事件流被中断
@@ -365,7 +388,9 @@ public class LockView extends View {
             // 意一次事件对于下一个事件而言就是它的前驱事件）之后，后面的事件如果被父控件拦截
             // ，那么当前控件就会收到一个CANCEL事件
             case MotionEvent.ACTION_CANCEL:
-                Log.d(TAG, "onCancel");
+                if (mLockViewListener != null) {
+                    mLockViewListener.onCancel();
+                }
                 handleActionUp(event);
                 return true;
         }
@@ -408,8 +433,17 @@ public class LockView extends View {
             Dot dot = touchDotAndFeedback(eventX, eventY);
 
             int touchedDotSize = mTouchedDots.size();
-            if (dot != null && touchedDotSize == 1) {
-                mInvalidateProgress = true;
+            if (dot != null) {
+                if (touchedDotSize == 1) {
+                    mInvalidateProgress = true;
+                    if (mLockViewListener != null) {
+                        mLockViewListener.onStart(dot.getDotValue());
+                    }
+                } else if (touchedDotSize > 1) {
+                    if (mLockViewListener != null) {
+                        mLockViewListener.onProgress(dot.getDotValue());
+                    }
+                }
             }
 
             float dX = Math.abs(eventX - xInProgress);
@@ -475,7 +509,14 @@ public class LockView extends View {
         float yDown = event.getY();
         Dot dot = touchDotAndFeedback(xDown, yDown);
         mInvalidatePath = false;
-        mInvalidateProgress = dot != null;
+        if (dot != null) {
+            mInvalidateProgress = true;
+            if (mLockViewListener != null && mTouchedDots.size() == 1) {
+                mLockViewListener.onStart(dot.getDotValue());
+            }
+        }else{
+            mInvalidateProgress = false;
+        }
         xInProgress = xDown;
         yInProgress = yDown;
         invalidate();
@@ -602,7 +643,15 @@ public class LockView extends View {
         super.onDetachedFromWindow();
         //取消动画
         cancelDotAnim();
+        //todo 这个方法需要在那些地方回调
+        clearListener();
         //todo 考察在这其中还需要释放那些资源
+    }
+
+    private void clearListener() {
+        if (mLockViewListener != null) {
+            mLockViewListener = null;
+        }
     }
 
     private void cancelDotAnim() {
@@ -626,11 +675,13 @@ public class LockView extends View {
         private int column;
         private float radius;
         private boolean isAnim;
+        private int dotValue;
 
-        Dot(int row, int column,float radius) {
+        Dot(int row, int column,float radius,int dotValue) {
             this.row = row;
             this.column = column;
             this.radius = radius;
+            this.dotValue = dotValue;
         }
 
         public int getRow() {
@@ -656,5 +707,38 @@ public class LockView extends View {
         public void setAnim(boolean anim) {
             isAnim = anim;
         }
+
+        public int getDotValue() {
+            return dotValue;
+        }
+    }
+
+    /**
+     * 在滑动过程中的回调监听器
+     * */
+    public interface LockViewListener{
+
+        /**
+         * 触碰到第一个点时被回调
+         * @param dotValue 被触碰点的数值
+         * */
+        void onStart(int dotValue);
+
+        /**
+         * 滑动过程中触碰到点被回调
+         * @param progressValue 被触碰点的数值
+         * */
+        void onProgress(int progressValue);
+
+        /**
+         * 滑动结束被回调
+         * @param result 整个滑动过程产生的最终结果
+         * */
+        void onComplete(int[] result);
+
+        /**
+         * 滑动过程被终止时回掉的方法
+         * */
+        void onCancel();
     }
 }
