@@ -9,6 +9,8 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.support.annotation.IntRange;
 import android.support.v4.view.animation.FastOutSlowInInterpolator;
 import android.support.v4.view.animation.LinearOutSlowInInterpolator;
@@ -551,6 +553,17 @@ public class LockView extends View {
         }
     }
 
+    //屏幕在旋转过程中方法回调顺序：onSaveInstanceState--->detach----->构造函数----->onRestoreInstanceState---->attach
+    @Override
+    protected Parcelable onSaveInstanceState() {
+        return super.onSaveInstanceState();
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Parcelable state) {
+        super.onRestoreInstanceState(state);
+    }
+
     /**
      * 根据手指按下的坐标位置，确定触摸的具体Dot是哪一个
      * @param x 手指按下的横坐标
@@ -669,7 +682,7 @@ public class LockView extends View {
     /**
      * lockView中点的抽象描述
      * */
-    private static class Dot{
+    private static class Dot implements Parcelable {
 
         private int row;
         private int column;
@@ -711,6 +724,40 @@ public class LockView extends View {
         public int getDotValue() {
             return dotValue;
         }
+
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+            dest.writeInt(this.row);
+            dest.writeInt(this.column);
+            dest.writeFloat(this.radius);
+            dest.writeByte(this.isAnim ? (byte) 1 : (byte) 0);
+            dest.writeInt(this.dotValue);
+        }
+
+        protected Dot(Parcel in) {
+            this.row = in.readInt();
+            this.column = in.readInt();
+            this.radius = in.readFloat();
+            this.isAnim = in.readByte() != 0;
+            this.dotValue = in.readInt();
+        }
+
+        public static final Parcelable.Creator<Dot> CREATOR = new Parcelable.Creator<Dot>() {
+            @Override
+            public Dot createFromParcel(Parcel source) {
+                return new Dot(source);
+            }
+
+            @Override
+            public Dot[] newArray(int size) {
+                return new Dot[size];
+            }
+        };
     }
 
     /**
@@ -740,5 +787,20 @@ public class LockView extends View {
          * 滑动过程被终止时回掉的方法
          * */
         void onCancel();
+    }
+
+    private static class SavedState extends BaseSavedState{
+
+        public SavedState(Parcel source) {
+            super(source);
+        }
+
+        public SavedState(Parcel source, ClassLoader loader) {
+            super(source, loader);
+        }
+
+        public SavedState(Parcelable superState) {
+            super(superState);
+        }
     }
 }
