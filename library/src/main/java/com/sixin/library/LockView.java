@@ -12,10 +12,8 @@ import android.graphics.RectF;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.IntRange;
-import android.support.v4.view.animation.FastOutSlowInInterpolator;
 import android.support.v4.view.animation.LinearOutSlowInInterpolator;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.HapticFeedbackConstants;
 import android.view.MotionEvent;
 import android.view.View;
@@ -187,7 +185,11 @@ public class LockView extends View {
         mLinePaint.setStrokeWidth(mPathWidth);
 
         mTouchedDots = new ArrayList<>();
+    }
 
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
         initDots();
     }
 
@@ -282,25 +284,6 @@ public class LockView extends View {
     }
 
     @Override
-    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-//        Log.d(TAG, "onSizeChanged");
-//        int adjustWidth = w - getPaddingStart() - getPaddingEnd();
-//        int adjustHeight = h - getPaddingTop() - getPaddingBottom();
-//        mGridWidth = adjustWidth / (float)mDotCount;
-//        mGridHeight = adjustHeight / (float)mDotCount;
-//
-//        float limitValue = Math.min(mGridHeight, mGridWidth);
-//        //todo 该异常提示不够清晰，需要重新提示
-//        if (mDotNormalSize > limitValue) {
-//            throw new IllegalArgumentException("Points are smaller than the shortest edge of a rectangle");
-//        }
-//        //todo 该异常提示不够清晰，需要重新提示
-//        if (mDotSelectedSize > limitValue) {
-//            throw new IllegalArgumentException("Points are smaller than the shortest edge of a rectangle");
-//        }
-    }
-
-    @Override
     protected void onDraw(Canvas canvas) {
         //todo 这个部分无限制的循环绘制，能不能控制绘制次数
         //todo path有rewind能提高性能，drawCricle有没有类似提高性能的API
@@ -385,6 +368,7 @@ public class LockView extends View {
                 handleActionUp(event);
                 return true;
             //描述一次事件流被中断
+            //在手指触摸屏幕的过程中，旋转了屏幕
             //当手指触摸屏幕的过程中，息屏
             //当控件收到前驱事件（什么叫前驱事件？一个从DOWN一直到UP的所有事件组合称为完整的手势，中间的任
             // 意一次事件对于下一个事件而言就是它的前驱事件）之后，后面的事件如果被父控件拦截
@@ -556,12 +540,18 @@ public class LockView extends View {
     //屏幕在旋转过程中方法回调顺序：onSaveInstanceState--->detach----->构造函数----->onRestoreInstanceState---->attach
     @Override
     protected Parcelable onSaveInstanceState() {
-        return super.onSaveInstanceState();
+        Parcelable parcelable = super.onSaveInstanceState();
+        return new SavedState(parcelable,mDotCount,mTouchedDots,mInvalidatePath);
     }
 
     @Override
     protected void onRestoreInstanceState(Parcelable state) {
-        super.onRestoreInstanceState(state);
+        SavedState savedState = (SavedState) state;
+        super.onRestoreInstanceState(savedState.getSuperState());
+        //todo 测试旋转屏幕后，接口回调
+        mDotCount = savedState.getDotCount();
+        mTouchedDots = savedState.getTouchedDots();
+        mInvalidatePath = savedState.isInvalidatePath();
     }
 
     /**
@@ -697,31 +687,31 @@ public class LockView extends View {
             this.dotValue = dotValue;
         }
 
-        public int getRow() {
+        private int getRow() {
             return row;
         }
 
-        public int getColumn() {
+        private int getColumn() {
             return column;
         }
 
-        public float getRadius() {
+        private float getRadius() {
             return radius;
         }
 
-        public void setRadius(float radius) {
+        private void setRadius(float radius) {
             this.radius = radius;
         }
 
-        public boolean isAnim() {
+        private boolean isAnim() {
             return isAnim;
         }
 
-        public void setAnim(boolean anim) {
+        private void setAnim(boolean anim) {
             isAnim = anim;
         }
 
-        public int getDotValue() {
+        private int getDotValue() {
             return dotValue;
         }
 
@@ -739,7 +729,7 @@ public class LockView extends View {
             dest.writeInt(this.dotValue);
         }
 
-        protected Dot(Parcel in) {
+        private Dot(Parcel in) {
             this.row = in.readInt();
             this.column = in.readInt();
             this.radius = in.readFloat();
@@ -791,16 +781,55 @@ public class LockView extends View {
 
     private static class SavedState extends BaseSavedState{
 
-        public SavedState(Parcel source) {
+        private int dotCount;
+        private List<Dot> touchedDots = new ArrayList<>();
+        private boolean invalidatePath;
+
+        private SavedState(Parcelable source,int dotCount,List<Dot> touchedDots,boolean invalidatePath) {
             super(source);
+            this.dotCount = dotCount;
+            this.touchedDots.addAll(touchedDots);
+            this.invalidatePath = invalidatePath;
         }
 
-        public SavedState(Parcel source, ClassLoader loader) {
-            super(source, loader);
+        private SavedState(Parcel source) {
+            super(source);
+            dotCount = source.readInt();
+            source.readTypedList(touchedDots,Dot.CREATOR);
+            this.invalidatePath = source.readByte() != 0;
         }
 
-        public SavedState(Parcelable superState) {
-            super(superState);
+        private int getDotCount() {
+            return dotCount;
         }
+
+        private List<Dot> getTouchedDots() {
+            return touchedDots;
+        }
+
+        private boolean isInvalidatePath() {
+            return invalidatePath;
+        }
+
+        @Override
+        public void writeToParcel(Parcel out, int flags) {
+            super.writeToParcel(out, flags);
+            out.writeInt(dotCount);
+            out.writeTypedList(touchedDots);
+            out.writeByte(this.invalidatePath?(byte)1:(byte)0);
+        }
+
+        public static final Parcelable.Creator<SavedState> CREATOR = new Creator<SavedState>() {
+            @Override
+            public SavedState createFromParcel(Parcel source) {
+                return new SavedState(source);
+            }
+
+            @Override
+            public SavedState[] newArray(int size) {
+                return new SavedState[size];
+            }
+        };
+
     }
 }
