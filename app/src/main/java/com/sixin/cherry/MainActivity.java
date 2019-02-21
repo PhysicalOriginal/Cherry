@@ -5,9 +5,6 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.TextView;
-import android.widget.Toast;
 
 import com.sixin.library.LockView;
 
@@ -37,6 +34,7 @@ public class MainActivity extends AppCompatActivity {
                 for (int i = 0; i < result.length; i++) {
                     Log.d(TAG, "onComplete:"+result[i]);
                 }
+                lockView.setVerifyMode(LockView.VerifyMode.CORRECT);
             }
 
             @Override

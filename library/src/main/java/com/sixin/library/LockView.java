@@ -8,9 +8,9 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Rect;
-import android.graphics.RectF;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.IntDef;
 import android.support.annotation.IntRange;
 import android.support.v4.view.animation.LinearOutSlowInInterpolator;
 import android.util.AttributeSet;
@@ -18,8 +18,14 @@ import android.view.HapticFeedbackConstants;
 import android.view.MotionEvent;
 import android.view.View;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.sixin.library.LockView.VerifyMode.CORRECT;
+import static com.sixin.library.LockView.VerifyMode.NORMAL;
+import static com.sixin.library.LockView.VerifyMode.WRONG;
 
 public class LockView extends View {
 
@@ -58,24 +64,24 @@ public class LockView extends View {
     private int mDotSelectedDuration;
 
     /**
-     * 正常状态时点的颜色
+     * 正常状态时的颜色
      * */
-    private int mDotNormalColor;
+    private int mNormalColor;
 
     /**
-     * 点被选中时的颜色
+     * 验证正确的颜色
      * */
-    private int mDotSelectedColor;
+    private int mCorrectColor;
+
+    /**
+     * 验证错误的颜色
+     * */
+    private int mColorWrong;
 
     /**
      * 路径的宽度
      * */
     private int mPathWidth;
-
-    /**
-     * 路径绘制错误的颜色
-     * */
-    private int mColorWrong;
 
     /**
      * 每个Dot所在区域的宽和高
@@ -130,6 +136,20 @@ public class LockView extends View {
 
     private LockViewListener mLockViewListener;
 
+    private int mVerifyMode = NORMAL;
+
+    @IntDef({NORMAL,CORRECT,WRONG})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface VerifyMode {
+
+        int NORMAL = 0;
+
+        int CORRECT = 1;
+
+        int WRONG = 2;
+
+    }
+
     public LockView(Context context) {
         this(context, null);
     }
@@ -158,8 +178,8 @@ public class LockView extends View {
             throw new IllegalArgumentException("mDotSelectedSize must be >= 0");
         }
         mDotSelectedDuration = typedArray.getInteger(R.styleable.LockView_dotSelectedAnimDuration, S_DEFAULT_DOT_SELECTED_ANIM_DURATION);
-        mDotNormalColor = typedArray.getColor(R.styleable.LockView_dotNormalColor, getResources().getColor(R.color.ColorDotNormal));
-        mDotSelectedColor = typedArray.getColor(R.styleable.LockView_dotSelectedColor, getResources().getColor(R.color.ColorDotSelected));
+        mNormalColor = typedArray.getColor(R.styleable.LockView_normalColor, getResources().getColor(R.color.ColorNormal));
+        mCorrectColor = typedArray.getColor(R.styleable.LockView_correctColor, getResources().getColor(R.color.ColorCorrect));
         //todo 注意线条宽度比正常圆大的问题
         mPathWidth = typedArray.getDimensionPixelSize(R.styleable.LockView_pathWidth, getResources().getDimensionPixelSize(R.dimen.pathWidth));
         mColorWrong = typedArray.getColor(R.styleable.LockView_wrongColor, getResources().getColor(R.color.ColorWrong));
@@ -172,7 +192,7 @@ public class LockView extends View {
         mDotPaint = new Paint();
         mDotPaint.setAntiAlias(true);
         mDotPaint.setDither(true);
-        mDotPaint.setColor(mDotNormalColor);
+        mDotPaint.setColor(mNormalColor);
         //todo 添加线条颜色属性
         mLinePath = new Path();
         mLinePaint = new Paint();
@@ -181,7 +201,7 @@ public class LockView extends View {
         mLinePaint.setStyle(Paint.Style.STROKE);
         mLinePaint.setStrokeJoin(Paint.Join.ROUND);
         mLinePaint.setStrokeCap(Paint.Cap.ROUND);
-        mLinePaint.setColor(mDotNormalColor);
+        mLinePaint.setColor(mNormalColor);
         mLinePaint.setStrokeWidth(mPathWidth);
 
         mTouchedDots = new ArrayList<>();
@@ -191,6 +211,7 @@ public class LockView extends View {
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
         initDots();
+        configTouchedDotState(mVerifyMode,false);
     }
 
     private void initDots() {
@@ -228,6 +249,37 @@ public class LockView extends View {
         //todo 什么情况下requestLayout不进行重绘
         requestLayout();
         invalidate();
+    }
+
+    /**
+     * 设置验证模式
+     * @param verifyMode @VerifyMode描述，只接收CORRECT,WRONG两个值
+     * */
+    //todo 测试该方法，在正常情况下以及横竖屏切换情况下
+    public void setVerifyMode(@VerifyMode int verifyMode) {
+        mVerifyMode = verifyMode;
+        //todo 数据存储在mTouhedDots中，存在一定的bug，在旋转屏幕的时候
+        configTouchedDotState(mVerifyMode,false);
+        //todo 是否需要添加requestLayout
+        invalidate();
+    }
+
+    private void configTouchedDotState(@VerifyMode int verifyMode,boolean isClean) {
+        //todo 测试数组越界
+        if(mTouchedDots != null && !mTouchedDots.isEmpty() && mDots!= null && mDots.length>0){
+            int dotRows = mDots.length;
+            int dotColumn = dotRows;
+            for (Dot touchedDot : mTouchedDots) {
+                int touchedDotRow = touchedDot.getRow();
+                int touchedDotColumn = touchedDot.getColumn();
+                if (touchedDotRow <= dotRows - 1 && touchedDotColumn <= dotColumn - 1) {
+                    mDots[touchedDotRow][touchedDotColumn].setDotState(verifyMode);
+                }
+            }
+            if (isClean) {
+                mTouchedDots.clear();
+            }
+        }
     }
 
     public LockViewListener getLockViewListener() {
@@ -303,6 +355,8 @@ public class LockView extends View {
                 return;
             }
 
+            mLinePaint.setColor(getCurrentColor(mVerifyMode));
+
             for (int i = 0; i < mTouchedDots.size(); i++) {
                 Dot touchedDot = mTouchedDots.get(i);
                 if (touchedDot != null) {
@@ -339,8 +393,30 @@ public class LockView extends View {
 
     private void drawCircle(Canvas canvas, float cx, float cy,Dot dot) {
         if (dot != null) {
+            mDotPaint.setColor(getCurrentColor(dot.getDotState()));
             canvas.drawCircle(cx,cy,dot.getRadius(),mDotPaint);
         }
+    }
+
+    /**
+     * 获取当前画笔的颜色
+     * @param verifyMode @VerifyMode注解范围内的值
+     * @return 返回颜色值
+     * */
+    private int getCurrentColor(@VerifyMode int verifyMode){
+        int colorRes = -1;
+        switch (verifyMode) {
+            case NORMAL:
+                colorRes =  mNormalColor;
+                break;
+            case CORRECT:
+                colorRes =  mCorrectColor;
+                break;
+            case WRONG:
+                colorRes =  mColorWrong;
+                break;
+        }
+        return colorRes;
     }
 
     //todo 考虑这个警告是否需要处理
@@ -490,7 +566,8 @@ public class LockView extends View {
     }
 
     private void handleActionDown(MotionEvent event) {
-        resetTouchedDots();
+        mVerifyMode = NORMAL;
+        configTouchedDotState(mVerifyMode,true);
         float xDown = event.getX();
         float yDown = event.getY();
         Dot dot = touchDotAndFeedback(xDown, yDown);
@@ -506,12 +583,6 @@ public class LockView extends View {
         xInProgress = xDown;
         yInProgress = yDown;
         invalidate();
-    }
-
-    private void resetTouchedDots() {
-        if (!mTouchedDots.isEmpty()) {
-            mTouchedDots.clear();
-        }
     }
 
     private void startScaleAnimation(final Dot dot) {
@@ -541,7 +612,8 @@ public class LockView extends View {
     @Override
     protected Parcelable onSaveInstanceState() {
         Parcelable parcelable = super.onSaveInstanceState();
-        return new SavedState(parcelable,mDotCount,mTouchedDots,mInvalidatePath);
+        return new SavedState(parcelable,mDotCount
+                ,mTouchedDots,mInvalidatePath,mVerifyMode);
     }
 
     @Override
@@ -552,6 +624,7 @@ public class LockView extends View {
         mDotCount = savedState.getDotCount();
         mTouchedDots = savedState.getTouchedDots();
         mInvalidatePath = savedState.isInvalidatePath();
+        mVerifyMode = savedState.getVerifyMode();
     }
 
     /**
@@ -679,6 +752,7 @@ public class LockView extends View {
         private float radius;
         private boolean isAnim;
         private int dotValue;
+        private int dotState = NORMAL;
 
         Dot(int row, int column,float radius,int dotValue) {
             this.row = row;
@@ -715,6 +789,14 @@ public class LockView extends View {
             return dotValue;
         }
 
+        private void setDotState(int dotState) {
+            this.dotState = dotState;
+        }
+
+        private int getDotState() {
+            return dotState;
+        }
+
         @Override
         public int describeContents() {
             return 0;
@@ -727,6 +809,7 @@ public class LockView extends View {
             dest.writeFloat(this.radius);
             dest.writeByte(this.isAnim ? (byte) 1 : (byte) 0);
             dest.writeInt(this.dotValue);
+            dest.writeInt(this.dotState);
         }
 
         private Dot(Parcel in) {
@@ -735,6 +818,7 @@ public class LockView extends View {
             this.radius = in.readFloat();
             this.isAnim = in.readByte() != 0;
             this.dotValue = in.readInt();
+            this.dotState = in.readInt();
         }
 
         public static final Parcelable.Creator<Dot> CREATOR = new Parcelable.Creator<Dot>() {
@@ -784,12 +868,15 @@ public class LockView extends View {
         private int dotCount;
         private List<Dot> touchedDots = new ArrayList<>();
         private boolean invalidatePath;
+        private int verifyMode;
 
-        private SavedState(Parcelable source,int dotCount,List<Dot> touchedDots,boolean invalidatePath) {
+        private SavedState(Parcelable source,int dotCount,List<Dot> touchedDots
+                ,boolean invalidatePath,int verifyMode) {
             super(source);
             this.dotCount = dotCount;
             this.touchedDots.addAll(touchedDots);
             this.invalidatePath = invalidatePath;
+            this.verifyMode = verifyMode;
         }
 
         private SavedState(Parcel source) {
@@ -797,6 +884,7 @@ public class LockView extends View {
             dotCount = source.readInt();
             source.readTypedList(touchedDots,Dot.CREATOR);
             this.invalidatePath = source.readByte() != 0;
+            this.verifyMode = source.readInt();
         }
 
         private int getDotCount() {
@@ -811,12 +899,17 @@ public class LockView extends View {
             return invalidatePath;
         }
 
+        private int getVerifyMode() {
+            return verifyMode;
+        }
+
         @Override
         public void writeToParcel(Parcel out, int flags) {
             super.writeToParcel(out, flags);
             out.writeInt(dotCount);
             out.writeTypedList(touchedDots);
             out.writeByte(this.invalidatePath?(byte)1:(byte)0);
+            out.writeInt(verifyMode);
         }
 
         public static final Parcelable.Creator<SavedState> CREATOR = new Creator<SavedState>() {

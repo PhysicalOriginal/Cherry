@@ -2,14 +2,14 @@
 <resources>
     <declare-styleable name="LockView">
         <attr name="dotCount" format="integer"/>
-        <attr name="dotNormalColor" format="color"/>
-        <attr name="dotSelectedColor" format="color"/>
+        <attr name="normalColor" format="color"/>
+        <attr name="wrongColor" format="color"/>
+        <attr name="correctColor" format="color"/>
         <attr name="dotNormalSize" format="dimension"/>
         <attr name="dotSelectedSize" format="dimension"/>
         <attr name="dotSelectedAnimDuration" format="integer"/>
         <attr name="feedbackEnabled" format="boolean"/>
         <!--todo 后期扩展的时候需要提供多种选种时候的动画效果和路线动画效果-->
         <attr name="pathWidth" format="dimension"/>
-        <attr name="wrongColor" format="color"/>
     </declare-styleable>
 </resources>
