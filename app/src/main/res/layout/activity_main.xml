@@ -10,15 +10,15 @@
 
         <com.sixin.library.LockView
             android:id="@+id/lockView"
-            android:layout_width="300dp"
-            android:layout_height="300dp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             android:layout_marginEnd="8dp"
             android:layout_marginBottom="8dp"
             android:padding="20dp"
             app:dotNormalSize="10dp"
             app:dotSelectedAnimDuration="15000"
             app:dotSelectedSize="20dp"
-            app:dotCount="3"
+            app:dotCount="4"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"

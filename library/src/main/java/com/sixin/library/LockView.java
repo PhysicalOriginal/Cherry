@@ -14,6 +14,7 @@ import android.support.annotation.IntDef;
 import android.support.annotation.IntRange;
 import android.support.v4.view.animation.LinearOutSlowInInterpolator;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.HapticFeedbackConstants;
 import android.view.MotionEvent;
 import android.view.View;
@@ -28,7 +29,7 @@ import static com.sixin.library.LockView.VerifyMode.NORMAL;
 import static com.sixin.library.LockView.VerifyMode.WRONG;
 
 public class LockView extends View {
-
+    //todo 中途没有触摸的点暂时不提供自动响应功能
     //todo 当通过纯java代码创建该view对象的时候，也能够实现UI效果
     //TODO lOG日志最后全部撤销
     //TODO 提供get set方法 当提供这些方法后因为内部数据可能没有同步更新，会出现很多的bug.
@@ -253,14 +254,13 @@ public class LockView extends View {
 
     /**
      * 设置验证模式
-     * @param verifyMode @VerifyMode描述，只接收CORRECT,WRONG两个值
+     * @param verifyMode @VerifyMode描述，只接收CORRECT,WRONG，NORMAL三个值
      * */
     //todo 测试该方法，在正常情况下以及横竖屏切换情况下
     public void setVerifyMode(@VerifyMode int verifyMode) {
         mVerifyMode = verifyMode;
         //todo 数据存储在mTouhedDots中，存在一定的bug，在旋转屏幕的时候
         configTouchedDotState(mVerifyMode,false);
-        //todo 是否需要添加requestLayout
         invalidate();
     }
 
@@ -450,7 +450,9 @@ public class LockView extends View {
             // 意一次事件对于下一个事件而言就是它的前驱事件）之后，后面的事件如果被父控件拦截
             // ，那么当前控件就会收到一个CANCEL事件
             case MotionEvent.ACTION_CANCEL:
+                Log.d(TAG, "onCancel");
                 if (mLockViewListener != null) {
+                    Log.d(TAG, "-------");
                     mLockViewListener.onCancel();
                 }
                 handleActionUp(event);
@@ -611,6 +613,7 @@ public class LockView extends View {
     //屏幕在旋转过程中方法回调顺序：onSaveInstanceState--->detach----->构造函数----->onRestoreInstanceState---->attach
     @Override
     protected Parcelable onSaveInstanceState() {
+        Log.d(TAG, "onSave");
         Parcelable parcelable = super.onSaveInstanceState();
         return new SavedState(parcelable,mDotCount
                 ,mTouchedDots,mInvalidatePath,mVerifyMode);

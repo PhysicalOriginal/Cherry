@@ -22,6 +22,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onStart(int dotValue) {
                 Log.d(TAG, "onStart:" + dotValue);
+                lockView.setVerifyMode(LockView.VerifyMode.CORRECT);
             }
 
             @Override
@@ -34,12 +35,13 @@ public class MainActivity extends AppCompatActivity {
                 for (int i = 0; i < result.length; i++) {
                     Log.d(TAG, "onComplete:"+result[i]);
                 }
-                lockView.setVerifyMode(LockView.VerifyMode.CORRECT);
+//                lockView.setVerifyMode(LockView.VerifyMode.CORRECT);
             }
 
             @Override
             public void onCancel() {
                 Log.d(TAG, "onCancel");
+//                lockView.setVerifyMode(LockView.VerifyMode.CORRECT);
             }
         });
         button.setOnClickListener(new View.OnClickListener() {
