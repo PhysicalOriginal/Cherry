@@ -7,37 +7,33 @@
     tools:context=".MainActivity"
     android:background="#A13C2D2D">
 
+        <com.makeramen.roundedimageview.RoundedImageView
+            android:id="@+id/img"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_fen"
+            app:layout_constraintBottom_toTopOf="@+id/lockView"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:riv_oval="true"
+            app:riv_mutate_background="true" />
 
         <com.sixin.library.LockView
             android:id="@+id/lockView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_width="300dp"
+            android:layout_height="300dp"
+            android:layout_marginTop="8dp"
             android:layout_marginEnd="8dp"
-            android:layout_marginBottom="8dp"
             android:padding="20dp"
+            app:dotCount="3"
             app:dotNormalSize="10dp"
-            app:dotSelectedAnimDuration="15000"
+            app:dotSelectedAnimDuration="1500"
             app:dotSelectedSize="20dp"
-            app:dotCount="4"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             />
-
-        <Button
-            android:id="@+id/button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="8dp"
-            android:text="Button"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            android:paddingStart="10dp"
-            android:paddingEnd="10dp"/>
-
 
 </android.support.constraint.ConstraintLayout>

@@ -19,7 +19,6 @@ public class MainActivity extends AppCompatActivity {
         final LockView lockView = findViewById(R.id.lockView);
         //todo 屏幕仿佛旋转出现了bug
         lockView.setVerifyMode(LockView.VerifyMode.CORRECT);
-        final Button button = findViewById(R.id.button);
         lockView.setLockViewListener(new LockView.LockViewListener() {
             @Override
             public void onStart(int dotValue) {
@@ -45,12 +44,6 @@ public class MainActivity extends AppCompatActivity {
             public void onCancel() {
                 Log.d(TAG, "onCancel");
 //                lockView.setVerifyMode(LockView.VerifyMode.CORRECT);
-            }
-        });
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                lockView.setDotCount(5);
             }
         });
     }
