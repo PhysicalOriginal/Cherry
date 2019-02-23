@@ -17,17 +17,20 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         final LockView lockView = findViewById(R.id.lockView);
+        //todo 屏幕仿佛旋转出现了bug
+        lockView.setVerifyMode(LockView.VerifyMode.CORRECT);
         final Button button = findViewById(R.id.button);
         lockView.setLockViewListener(new LockView.LockViewListener() {
             @Override
             public void onStart(int dotValue) {
-                Log.d(TAG, "onStart:" + dotValue);
-                lockView.setVerifyMode(LockView.VerifyMode.CORRECT);
+//                Log.d(TAG, "onStart:" + dotValue);
+//                lockView.setVerifyMode(LockView.VerifyMode.WRONG);
             }
 
             @Override
             public void onProgress(int progressValue) {
-                Log.d(TAG, "onProgress:" + progressValue);
+//                Log.d(TAG, "onProgress:" + progressValue);
+//                lockView.setVerifyMode(LockView.VerifyMode.WRONG);
             }
 
             @Override
@@ -35,7 +38,7 @@ public class MainActivity extends AppCompatActivity {
                 for (int i = 0; i < result.length; i++) {
                     Log.d(TAG, "onComplete:"+result[i]);
                 }
-//                lockView.setVerifyMode(LockView.VerifyMode.CORRECT);
+//                lockView.setVerifyMode(LockView.VerifyMode.WRONG);
             }
 
             @Override

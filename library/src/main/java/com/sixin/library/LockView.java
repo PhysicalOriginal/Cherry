@@ -29,6 +29,7 @@ import static com.sixin.library.LockView.VerifyMode.NORMAL;
 import static com.sixin.library.LockView.VerifyMode.WRONG;
 
 public class LockView extends View {
+    //todo 测试内存占用，防止横竖屏有些对象无法释放
     //todo 中途没有触摸的点暂时不提供自动响应功能
     //todo 当通过纯java代码创建该view对象的时候，也能够实现UI效果
     //TODO lOG日志最后全部撤销
@@ -111,6 +112,7 @@ public class LockView extends View {
     private Path mLinePath;
 
     private Dot[][] mDots;
+    private boolean[][] mDotDown;
     /**
      * 已经被触摸的点的集合
      * */
@@ -212,12 +214,13 @@ public class LockView extends View {
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
         initDots();
-        configTouchedDotState(mVerifyMode,false);
+        configDotDown();
     }
 
     private void initDots() {
         float radius = mDotNormalSize/2f;
         mDots = new Dot[mDotCount][mDotCount];
+        mDotDown = new boolean[mDotCount][mDotCount];
         int dotValue =0;
         for (int i = 0; i < mDotCount; i++) {
             for (int j = 0; j < mDotCount; j++) {
@@ -240,6 +243,7 @@ public class LockView extends View {
     public void setDotCount(@IntRange(from =0,to = 9) int dotCount) {
         this.mDotCount = dotCount;
         mDots = null;
+        mDotDown = null;
         initDots();
         mInvalidatePath = false;
         mInvalidateProgress = false;
@@ -247,7 +251,6 @@ public class LockView extends View {
             mTouchedDots.clear();
         }
         cancelDotAnim();
-        //todo 什么情况下requestLayout不进行重绘
         requestLayout();
         invalidate();
     }
@@ -259,27 +262,7 @@ public class LockView extends View {
     //todo 测试该方法，在正常情况下以及横竖屏切换情况下
     public void setVerifyMode(@VerifyMode int verifyMode) {
         mVerifyMode = verifyMode;
-        //todo 数据存储在mTouhedDots中，存在一定的bug，在旋转屏幕的时候
-        configTouchedDotState(mVerifyMode,false);
         invalidate();
-    }
-
-    private void configTouchedDotState(@VerifyMode int verifyMode,boolean isClean) {
-        //todo 测试数组越界
-        if(mTouchedDots != null && !mTouchedDots.isEmpty() && mDots!= null && mDots.length>0){
-            int dotRows = mDots.length;
-            int dotColumn = dotRows;
-            for (Dot touchedDot : mTouchedDots) {
-                int touchedDotRow = touchedDot.getRow();
-                int touchedDotColumn = touchedDot.getColumn();
-                if (touchedDotRow <= dotRows - 1 && touchedDotColumn <= dotColumn - 1) {
-                    mDots[touchedDotRow][touchedDotColumn].setDotState(verifyMode);
-                }
-            }
-            if (isClean) {
-                mTouchedDots.clear();
-            }
-        }
     }
 
     public LockViewListener getLockViewListener() {
@@ -343,19 +326,20 @@ public class LockView extends View {
             for (int j = 0; j < mDotCount; j++) {
                 float cx = getCx(j);
                 float cy = getCy(i);
-                drawCircle(canvas, cx, cy,mDots[i][j]);
+                Log.d(TAG,"i:"+i+" j"+j+" "+mDotDown[i][j]);
+                drawCircle(canvas, cx, cy,mDots[i][j],mDotDown[i][j]);
             }
         }
-
+        Log.d(TAG, "----------");
         if (mInvalidatePath) {
             float lastX = -1f;
             float lastY = -1f;
-
+            Log.d(TAG, "" + mInvalidatePath + " " + mInvalidateProgress);
             if (mTouchedDots.size() == 0) {
                 return;
             }
 
-            mLinePaint.setColor(getCurrentColor(mVerifyMode));
+            mLinePaint.setColor(getCurrentColor(true));
 
             for (int i = 0; i < mTouchedDots.size(); i++) {
                 Dot touchedDot = mTouchedDots.get(i);
@@ -391,30 +375,26 @@ public class LockView extends View {
         return getPaddingTop() + mGridHeight/2 + row * mGridHeight;
     }
 
-    private void drawCircle(Canvas canvas, float cx, float cy,Dot dot) {
+    private void drawCircle(Canvas canvas, float cx, float cy,Dot dot,boolean dotDown) {
         if (dot != null) {
-            mDotPaint.setColor(getCurrentColor(dot.getDotState()));
+            mDotPaint.setColor(getCurrentColor(dotDown));
             canvas.drawCircle(cx,cy,dot.getRadius(),mDotPaint);
         }
     }
 
     /**
      * 获取当前画笔的颜色
-     * @param verifyMode @VerifyMode注解范围内的值
+     * @param dotDown 点是否被按下
      * @return 返回颜色值
      * */
-    private int getCurrentColor(@VerifyMode int verifyMode){
+    private int getCurrentColor(boolean dotDown){
         int colorRes = -1;
-        switch (verifyMode) {
-            case NORMAL:
-                colorRes =  mNormalColor;
-                break;
-            case CORRECT:
-                colorRes =  mCorrectColor;
-                break;
-            case WRONG:
-                colorRes =  mColorWrong;
-                break;
+        if (!dotDown || mInvalidateProgress || mVerifyMode == NORMAL) {
+            colorRes = mNormalColor;
+        } else if (mVerifyMode == CORRECT) {
+            colorRes = mCorrectColor;
+        } else if (mVerifyMode == WRONG) {
+            colorRes = mColorWrong;
         }
         return colorRes;
     }
@@ -558,6 +538,7 @@ public class LockView extends View {
 
         if (dot != null && !dot.isAnim()) {
             dot.setAnim(true);
+            mDotDown[dot.getRow()][dot.getColumn()] = true;
             startScaleAnimation(dot);
             if (mFeedbackEnabled) {
                 performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY, HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING | HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING);
@@ -568,8 +549,7 @@ public class LockView extends View {
     }
 
     private void handleActionDown(MotionEvent event) {
-        mVerifyMode = NORMAL;
-        configTouchedDotState(mVerifyMode,true);
+        resetTouchedDot();
         float xDown = event.getX();
         float yDown = event.getY();
         Dot dot = touchDotAndFeedback(xDown, yDown);
@@ -585,6 +565,22 @@ public class LockView extends View {
         xInProgress = xDown;
         yInProgress = yDown;
         invalidate();
+    }
+
+    private void resetTouchedDot() {
+        if (mDotDown != null) {
+            int row = mDotDown.length;
+            int column = row;
+            for (int r = 0; r < row; r++) {
+                for (int c = 0; c < column; c++) {
+                    mDotDown[r][c] = false;
+                }
+            }
+        }
+
+        if(mTouchedDots != null && !mTouchedDots.isEmpty()){
+            mTouchedDots.clear();
+        }
     }
 
     private void startScaleAnimation(final Dot dot) {
@@ -628,6 +624,14 @@ public class LockView extends View {
         mTouchedDots = savedState.getTouchedDots();
         mInvalidatePath = savedState.isInvalidatePath();
         mVerifyMode = savedState.getVerifyMode();
+    }
+
+    private void configDotDown() {
+        if (mTouchedDots != null && mTouchedDots.size() > 0 && mDotDown != null) {
+            for (Dot dot : mTouchedDots) {
+                mDotDown[dot.getRow()][dot.getColumn()] = true;
+            }
+        }
     }
 
     /**
@@ -755,7 +759,6 @@ public class LockView extends View {
         private float radius;
         private boolean isAnim;
         private int dotValue;
-        private int dotState = NORMAL;
 
         Dot(int row, int column,float radius,int dotValue) {
             this.row = row;
@@ -792,14 +795,6 @@ public class LockView extends View {
             return dotValue;
         }
 
-        private void setDotState(int dotState) {
-            this.dotState = dotState;
-        }
-
-        private int getDotState() {
-            return dotState;
-        }
-
         @Override
         public int describeContents() {
             return 0;
@@ -812,7 +807,6 @@ public class LockView extends View {
             dest.writeFloat(this.radius);
             dest.writeByte(this.isAnim ? (byte) 1 : (byte) 0);
             dest.writeInt(this.dotValue);
-            dest.writeInt(this.dotState);
         }
 
         private Dot(Parcel in) {
@@ -821,7 +815,6 @@ public class LockView extends View {
             this.radius = in.readFloat();
             this.isAnim = in.readByte() != 0;
             this.dotValue = in.readInt();
-            this.dotState = in.readInt();
         }
 
         public static final Parcelable.Creator<Dot> CREATOR = new Parcelable.Creator<Dot>() {
