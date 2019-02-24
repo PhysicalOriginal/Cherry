@@ -10,6 +10,8 @@ import android.graphics.Path;
 import android.graphics.Rect;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.ColorInt;
+import android.support.annotation.ColorRes;
 import android.support.annotation.IntDef;
 import android.support.annotation.IntRange;
 import android.support.v4.view.animation.LinearOutSlowInInterpolator;
@@ -232,10 +234,7 @@ public class LockView extends View {
     public int getDotCount() {
         return mDotCount;
     }
-    //todo 考察开发者在任意地方调用该代码
-    //1:在onCreate实例化之后调用
-    //2：在回调接口中调用  绘制了若干次，再按按钮
-    //todo 在碎片和activity的生命周期中回调
+
     /**
      * 设置LockView每行点的个数
      * @param dotCount 每行点的个数，注意使用了@IntRange限制了dotCount的大小。dotCount在0到9范围内
@@ -255,14 +254,25 @@ public class LockView extends View {
         invalidate();
     }
 
+    public int getVerifyMode() {
+        return mVerifyMode;
+    }
+
     /**
      * 设置验证模式
      * @param verifyMode @VerifyMode描述，只接收CORRECT,WRONG，NORMAL三个值
      * */
-    //todo 测试该方法，在正常情况下以及横竖屏切换情况下
     public void setVerifyMode(@VerifyMode int verifyMode) {
         mVerifyMode = verifyMode;
         invalidate();
+    }
+
+    public int getNormalColor() {
+        return mNormalColor;
+    }
+
+    public void setNormalColor(@ColorRes int normalColor) {
+        this.mNormalColor = normalColor;
     }
 
     public LockViewListener getLockViewListener() {
@@ -479,6 +489,7 @@ public class LockView extends View {
             int touchedDotSize = mTouchedDots.size();
             if (dot != null) {
                 if (touchedDotSize == 1) {
+                    Log.d(TAG, "move:" + touchedDotSize);
                     mInvalidateProgress = true;
                     if (mLockViewListener != null) {
                         mLockViewListener.onStart(dot.getDotValue());
