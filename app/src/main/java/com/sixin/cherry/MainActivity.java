@@ -1,5 +1,6 @@
 package com.sixin.cherry;
 
+import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -19,11 +20,13 @@ public class MainActivity extends AppCompatActivity {
         lockView = findViewById(R.id.lockView);
         //todo 屏幕仿佛旋转出现了bug
         lockView.setVerifyMode(LockView.VerifyMode.CORRECT);
+
         lockView.setLockViewListener(new LockView.LockViewListener() {
             @Override
             public void onStart(int dotValue) {
 //                Log.d(TAG, "onStart:" + dotValue);
 //                lockView.setVerifyMode(LockView.VerifyMode.WRONG);
+
             }
 
             @Override
@@ -39,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
                 }
 //                lockView.setVerifyMode(LockView.VerifyMode.WRONG);
 
+
             }
 
             @Override
@@ -52,6 +56,7 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.img).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                lockView.setNormalColor(getResources().getColor(R.color.ColorWrong));
             }
         });
     }
