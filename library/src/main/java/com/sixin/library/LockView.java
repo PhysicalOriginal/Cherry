@@ -276,6 +276,15 @@ public class LockView extends View {
         invalidate();
     }
 
+    public int getCorrectColor() {
+        return mCorrectColor;
+    }
+
+    public void setCorrectColor(int correctColor) {
+        this.mCorrectColor = correctColor;
+        invalidate();
+    }
+
     public LockViewListener getLockViewListener() {
         return mLockViewListener;
     }
@@ -624,7 +633,8 @@ public class LockView extends View {
         Log.d(TAG, "onSave");
         Parcelable parcelable = super.onSaveInstanceState();
         return new SavedState(parcelable,mDotCount
-                ,mTouchedDots,mInvalidatePath,mVerifyMode,mNormalColor);
+                ,mTouchedDots,mInvalidatePath,mVerifyMode,mNormalColor
+                ,mCorrectColor);
     }
 
     @Override
@@ -637,6 +647,7 @@ public class LockView extends View {
         mInvalidatePath = savedState.isInvalidatePath();
         mVerifyMode = savedState.getVerifyMode();
         mNormalColor = savedState.getNormalColor();
+        mCorrectColor = savedState.getCorrectColor();
     }
 
     private void configDotDown() {
@@ -879,15 +890,18 @@ public class LockView extends View {
         private boolean invalidatePath;
         private int verifyMode;
         private int normalColor;
+        private int correctColor;
 
         private SavedState(Parcelable source,int dotCount,List<Dot> touchedDots
-                ,boolean invalidatePath,int verifyMode,int normalColor) {
+                ,boolean invalidatePath,int verifyMode,int normalColor
+                ,int correctColor) {
             super(source);
             this.dotCount = dotCount;
             this.touchedDots.addAll(touchedDots);
             this.invalidatePath = invalidatePath;
             this.verifyMode = verifyMode;
             this.normalColor = normalColor;
+            this.correctColor = correctColor;
         }
 
         private SavedState(Parcel source) {
@@ -897,6 +911,7 @@ public class LockView extends View {
             this.invalidatePath = source.readByte() != 0;
             this.verifyMode = source.readInt();
             this.normalColor = source.readInt();
+            this.correctColor = source.readInt();
         }
 
         private int getDotCount() {
@@ -919,6 +934,10 @@ public class LockView extends View {
             return normalColor;
         }
 
+        public int getCorrectColor() {
+            return correctColor;
+        }
+
         @Override
         public void writeToParcel(Parcel out, int flags) {
             super.writeToParcel(out, flags);
@@ -927,6 +946,7 @@ public class LockView extends View {
             out.writeByte(this.invalidatePath?(byte)1:(byte)0);
             out.writeInt(verifyMode);
             out.writeInt(normalColor);
+            out.writeInt(correctColor);
         }
 
         public static final Parcelable.Creator<SavedState> CREATOR = new Creator<SavedState>() {

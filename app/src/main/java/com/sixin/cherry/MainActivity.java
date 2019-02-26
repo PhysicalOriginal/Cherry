@@ -20,7 +20,7 @@ public class MainActivity extends AppCompatActivity {
         lockView = findViewById(R.id.lockView);
         //todo 屏幕仿佛旋转出现了bug
         lockView.setVerifyMode(LockView.VerifyMode.CORRECT);
-
+        lockView.setCorrectColor(getResources().getColor(R.color.colorAccent));
         lockView.setLockViewListener(new LockView.LockViewListener() {
             @Override
             public void onStart(int dotValue) {
@@ -40,9 +40,7 @@ public class MainActivity extends AppCompatActivity {
                 for (int i = 0; i < result.length; i++) {
                     Log.d(TAG, "onComplete:"+result[i]);
                 }
-//                lockView.setVerifyMode(LockView.VerifyMode.WRONG);
-
-
+                lockView.setVerifyMode(LockView.VerifyMode.CORRECT);
             }
 
             @Override
@@ -56,7 +54,8 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.img).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                lockView.setNormalColor(getResources().getColor(R.color.ColorWrong));
+//                lockView.setNormalColor(getResources().getColor(R.color.ColorWrong));
+                lockView.setCorrectColor(getResources().getColor(R.color.colorPrimaryDark));
             }
         });
     }
