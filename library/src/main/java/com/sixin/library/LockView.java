@@ -239,7 +239,7 @@ public class LockView extends View {
      * 设置LockView每行点的个数
      * @param dotCount 每行点的个数，注意使用了@IntRange限制了dotCount的大小。dotCount在0到9范围内
      * */
-    public void setDotCount(@IntRange(from =0,to = 9) int dotCount) {
+    public void setDotCount(@IntRange(from =1,to = 9) int dotCount) {
         this.mDotCount = dotCount;
         mDots = null;
         mDotDown = null;
@@ -282,6 +282,21 @@ public class LockView extends View {
 
     public void setCorrectColor(int correctColor) {
         this.mCorrectColor = correctColor;
+        invalidate();
+    }
+
+    public int getDotNormalSize() {
+        return mDotNormalSize;
+    }
+
+    public void setDotNormalSize(@IntRange(from = 1) int dotNormalSize) {
+        this.mDotNormalSize = dotNormalSize;
+        mInvalidatePath = false;
+        mInvalidateProgress = false;
+        resetTouchedDot();
+        cancelDotAnim();
+        resetDots();
+        requestLayout();
         invalidate();
     }
 
@@ -346,15 +361,12 @@ public class LockView extends View {
             for (int j = 0; j < mDotCount; j++) {
                 float cx = getCx(j);
                 float cy = getCy(i);
-                Log.d(TAG,"i:"+i+" j"+j+" "+mDotDown[i][j]);
                 drawCircle(canvas, cx, cy,mDots[i][j],mDotDown[i][j]);
             }
         }
-        Log.d(TAG, "----------");
         if (mInvalidatePath) {
             float lastX = -1f;
             float lastY = -1f;
-            Log.d(TAG, "" + mInvalidatePath + " " + mInvalidateProgress);
             if (mTouchedDots.size() == 0) {
                 return;
             }
@@ -450,9 +462,7 @@ public class LockView extends View {
             // 意一次事件对于下一个事件而言就是它的前驱事件）之后，后面的事件如果被父控件拦截
             // ，那么当前控件就会收到一个CANCEL事件
             case MotionEvent.ACTION_CANCEL:
-                Log.d(TAG, "onCancel");
                 if (mLockViewListener != null) {
-                    Log.d(TAG, "-------");
                     mLockViewListener.onCancel();
                 }
                 handleActionUp(event);
@@ -499,7 +509,6 @@ public class LockView extends View {
             int touchedDotSize = mTouchedDots.size();
             if (dot != null) {
                 if (touchedDotSize == 1) {
-                    Log.d(TAG, "move:" + touchedDotSize);
                     mInvalidateProgress = true;
                     if (mLockViewListener != null) {
                         mLockViewListener.onStart(dot.getDotValue());
@@ -630,11 +639,10 @@ public class LockView extends View {
     //屏幕在旋转过程中方法回调顺序：onSaveInstanceState--->detach----->构造函数----->onRestoreInstanceState---->attach
     @Override
     protected Parcelable onSaveInstanceState() {
-        Log.d(TAG, "onSave");
         Parcelable parcelable = super.onSaveInstanceState();
         return new SavedState(parcelable,mDotCount
                 ,mTouchedDots,mInvalidatePath,mVerifyMode,mNormalColor
-                ,mCorrectColor);
+                ,mCorrectColor,mDotNormalSize);
     }
 
     @Override
@@ -648,6 +656,7 @@ public class LockView extends View {
         mVerifyMode = savedState.getVerifyMode();
         mNormalColor = savedState.getNormalColor();
         mCorrectColor = savedState.getCorrectColor();
+        mDotNormalSize = savedState.getDotNormalSize();
     }
 
     private void configDotDown() {
@@ -891,10 +900,11 @@ public class LockView extends View {
         private int verifyMode;
         private int normalColor;
         private int correctColor;
+        private int dotNormalSize;
 
         private SavedState(Parcelable source,int dotCount,List<Dot> touchedDots
                 ,boolean invalidatePath,int verifyMode,int normalColor
-                ,int correctColor) {
+                ,int correctColor,int dotNormalSize) {
             super(source);
             this.dotCount = dotCount;
             this.touchedDots.addAll(touchedDots);
@@ -902,6 +912,7 @@ public class LockView extends View {
             this.verifyMode = verifyMode;
             this.normalColor = normalColor;
             this.correctColor = correctColor;
+            this.dotNormalSize = dotNormalSize;
         }
 
         private SavedState(Parcel source) {
@@ -912,6 +923,7 @@ public class LockView extends View {
             this.verifyMode = source.readInt();
             this.normalColor = source.readInt();
             this.correctColor = source.readInt();
+            this.dotNormalSize = source.readInt();
         }
 
         private int getDotCount() {
@@ -930,12 +942,16 @@ public class LockView extends View {
             return verifyMode;
         }
 
-        public int getNormalColor() {
+        private int getNormalColor() {
             return normalColor;
         }
 
-        public int getCorrectColor() {
+        private int getCorrectColor() {
             return correctColor;
+        }
+
+        public int getDotNormalSize() {
+            return dotNormalSize;
         }
 
         @Override
@@ -947,6 +963,7 @@ public class LockView extends View {
             out.writeInt(verifyMode);
             out.writeInt(normalColor);
             out.writeInt(correctColor);
+            out.writeInt(dotNormalSize);
         }
 
         public static final Parcelable.Creator<SavedState> CREATOR = new Creator<SavedState>() {

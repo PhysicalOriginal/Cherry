@@ -40,14 +40,15 @@ public class MainActivity extends AppCompatActivity {
                 for (int i = 0; i < result.length; i++) {
                     Log.d(TAG, "onComplete:"+result[i]);
                 }
-                lockView.setVerifyMode(LockView.VerifyMode.CORRECT);
+//                lockView.setVerifyMode(LockView.VerifyMode.CORRECT);
+                lockView.setDotNormalSize(dip2px(getResources().getDimension(R.dimen.dp_15)));
             }
 
             @Override
             public void onCancel() {
-                Log.d(TAG, "onCancel");
 //                lockView.setDotCount(4);
 //                lockView.setVerifyMode(LockView.VerifyMode.CORRECT);
+
             }
         });
 
@@ -55,7 +56,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 //                lockView.setNormalColor(getResources().getColor(R.color.ColorWrong));
-                lockView.setCorrectColor(getResources().getColor(R.color.colorPrimaryDark));
+//                lockView.setDotNormalSize(dip2px(getResources().getDimension(R.dimen.dp_15)));
+//                lockView.setCorrectColor(getResources().getColor(R.color.colorPrimaryDark));
             }
         });
     }
@@ -65,6 +67,12 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
 //        lockView.setDotCount(5);
     }
+
+    public  int dip2px(float dpValue) {
+        float scale =getResources().getDisplayMetrics().density;
+        return (int) (dpValue * scale + 0.5f);
+    }
+
 
     @Override
     protected void onDestroy() {
