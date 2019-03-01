@@ -20,19 +20,21 @@ public class MainActivity extends AppCompatActivity {
         lockView = findViewById(R.id.lockView);
         //todo 屏幕仿佛旋转出现了bug
         lockView.setVerifyMode(LockView.VerifyMode.CORRECT);
+//        lockView.setDotSelectedAnimDuration(1000);
         lockView.setCorrectColor(getResources().getColor(R.color.colorAccent));
         lockView.setLockViewListener(new LockView.LockViewListener() {
             @Override
             public void onStart(int dotValue) {
 //                Log.d(TAG, "onStart:" + dotValue);
 //                lockView.setVerifyMode(LockView.VerifyMode.WRONG);
-
+//                  lockView.setDotSelectedAnimDuration(1000);
             }
 
             @Override
             public void onProgress(int progressValue) {
 //                Log.d(TAG, "onProgress:" + progressValue);
 //                lockView.setVerifyMode(LockView.VerifyMode.WRONG);
+//                lockView.setDotSelectedAnimDuration(1000);
             }
 
             @Override
@@ -41,7 +43,8 @@ public class MainActivity extends AppCompatActivity {
                     Log.d(TAG, "onComplete:"+result[i]);
                 }
 //                lockView.setVerifyMode(LockView.VerifyMode.CORRECT);
-                lockView.setDotNormalSize(dip2px(getResources().getDimension(R.dimen.dp_15)));
+//                lockView.setDotNormalSize(dip2px(getResources().getDimension(R.dimen.dp_15)));
+//                lockView.setDotSelectedAnimDuration(1000);
             }
 
             @Override
@@ -58,6 +61,7 @@ public class MainActivity extends AppCompatActivity {
 //                lockView.setNormalColor(getResources().getColor(R.color.ColorWrong));
 //                lockView.setDotNormalSize(dip2px(getResources().getDimension(R.dimen.dp_15)));
 //                lockView.setCorrectColor(getResources().getColor(R.color.colorPrimaryDark));
+                lockView.setDotSelectedAnimDuration(1000);
             }
         });
     }

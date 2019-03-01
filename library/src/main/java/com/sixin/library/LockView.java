@@ -11,12 +11,10 @@ import android.graphics.Rect;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.ColorInt;
-import android.support.annotation.ColorRes;
 import android.support.annotation.IntDef;
 import android.support.annotation.IntRange;
 import android.support.v4.view.animation.LinearOutSlowInInterpolator;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.HapticFeedbackConstants;
 import android.view.MotionEvent;
 import android.view.View;
@@ -65,7 +63,7 @@ public class LockView extends View {
     /**
      * 点被选中时的动画周期
      * */
-    private int mDotSelectedDuration;
+    private int mDotSelectedAnimDuration;
 
     /**
      * 正常状态时的颜色
@@ -182,7 +180,7 @@ public class LockView extends View {
         if (mDotSelectedSize <= 0) {
             throw new IllegalArgumentException("mDotSelectedSize must be >= 0");
         }
-        mDotSelectedDuration = typedArray.getInteger(R.styleable.LockView_dotSelectedAnimDuration, S_DEFAULT_DOT_SELECTED_ANIM_DURATION);
+        mDotSelectedAnimDuration = typedArray.getInteger(R.styleable.LockView_dotSelectedAnimDuration, S_DEFAULT_DOT_SELECTED_ANIM_DURATION);
         mNormalColor = typedArray.getColor(R.styleable.LockView_normalColor, getResources().getColor(R.color.ColorNormal));
         mCorrectColor = typedArray.getColor(R.styleable.LockView_correctColor, getResources().getColor(R.color.ColorCorrect));
         //todo 注意线条宽度比正常圆大的问题
@@ -298,6 +296,14 @@ public class LockView extends View {
         resetDots();
         requestLayout();
         invalidate();
+    }
+
+    public int getDotSelectedAnimDuration() {
+        return mDotSelectedAnimDuration;
+    }
+
+    public void setDotSelectedAnimDuration(int dotSelectedAnimDuration) {
+        this.mDotSelectedAnimDuration = dotSelectedAnimDuration;
     }
 
     public LockViewListener getLockViewListener() {
@@ -621,7 +627,7 @@ public class LockView extends View {
             float selectedRadius = mDotSelectedSize / 2f;
             ObjectAnimator scaleAnimator = ObjectAnimator
                                                 .ofFloat(dot,"radius",originRadius,selectedRadius,originRadius)
-                                                .setDuration(mDotSelectedDuration);
+                                                .setDuration(mDotSelectedAnimDuration);
             scaleAnimator.setInterpolator(new LinearOutSlowInInterpolator());
             scaleAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
                 @Override
@@ -642,7 +648,7 @@ public class LockView extends View {
         Parcelable parcelable = super.onSaveInstanceState();
         return new SavedState(parcelable,mDotCount
                 ,mTouchedDots,mInvalidatePath,mVerifyMode,mNormalColor
-                ,mCorrectColor,mDotNormalSize);
+                ,mCorrectColor,mDotNormalSize,mDotSelectedAnimDuration);
     }
 
     @Override
@@ -657,6 +663,7 @@ public class LockView extends View {
         mNormalColor = savedState.getNormalColor();
         mCorrectColor = savedState.getCorrectColor();
         mDotNormalSize = savedState.getDotNormalSize();
+        mDotSelectedAnimDuration = savedState.getAnimDuration();
     }
 
     private void configDotDown() {
@@ -893,7 +900,7 @@ public class LockView extends View {
     }
 
     private static class SavedState extends BaseSavedState{
-
+        //todo 完善的点，对于非法参数进行校验，不进行序列化和反序列化
         private int dotCount;
         private List<Dot> touchedDots = new ArrayList<>();
         private boolean invalidatePath;
@@ -901,10 +908,11 @@ public class LockView extends View {
         private int normalColor;
         private int correctColor;
         private int dotNormalSize;
+        private int animDuration;
 
         private SavedState(Parcelable source,int dotCount,List<Dot> touchedDots
                 ,boolean invalidatePath,int verifyMode,int normalColor
-                ,int correctColor,int dotNormalSize) {
+                ,int correctColor,int dotNormalSize,int animDuration) {
             super(source);
             this.dotCount = dotCount;
             this.touchedDots.addAll(touchedDots);
@@ -913,6 +921,7 @@ public class LockView extends View {
             this.normalColor = normalColor;
             this.correctColor = correctColor;
             this.dotNormalSize = dotNormalSize;
+            this.animDuration = animDuration;
         }
 
         private SavedState(Parcel source) {
@@ -924,6 +933,7 @@ public class LockView extends View {
             this.normalColor = source.readInt();
             this.correctColor = source.readInt();
             this.dotNormalSize = source.readInt();
+            this.animDuration = source.readInt();
         }
 
         private int getDotCount() {
@@ -950,8 +960,12 @@ public class LockView extends View {
             return correctColor;
         }
 
-        public int getDotNormalSize() {
+        private int getDotNormalSize() {
             return dotNormalSize;
+        }
+
+        public int getAnimDuration() {
+            return animDuration;
         }
 
         @Override
@@ -964,6 +978,7 @@ public class LockView extends View {
             out.writeInt(normalColor);
             out.writeInt(correctColor);
             out.writeInt(dotNormalSize);
+            out.writeInt(animDuration);
         }
 
         public static final Parcelable.Creator<SavedState> CREATOR = new Creator<SavedState>() {
