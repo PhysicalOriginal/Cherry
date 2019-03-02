@@ -283,6 +283,15 @@ public class LockView extends View {
         invalidate();
     }
 
+    public int getColorWrong() {
+        return mColorWrong;
+    }
+
+    public void setColorWrong(int colorWrong) {
+        this.mColorWrong = colorWrong;
+        invalidate();
+    }
+
     public int getDotNormalSize() {
         return mDotNormalSize;
     }
