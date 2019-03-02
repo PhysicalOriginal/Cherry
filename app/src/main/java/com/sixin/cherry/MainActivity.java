@@ -19,7 +19,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         lockView = findViewById(R.id.lockView);
         //todo 屏幕仿佛旋转出现了bug
-        lockView.setVerifyMode(LockView.VerifyMode.WRONG);
+        lockView.setVerifyMode(LockView.VerifyMode.CORRECT);
         lockView.setColorWrong(getResources().getColor(R.color.colorPrimaryDark));
 //        lockView.setDotSelectedAnimDuration(1000);
         lockView.setCorrectColor(getResources().getColor(R.color.colorAccent));
