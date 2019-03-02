@@ -3,6 +3,8 @@ package com.sixin.cherry;
 import android.app.Application;
 import android.content.Context;
 
+import com.github.moduth.blockcanary.BlockCanary;
+import com.github.moduth.blockcanary.BlockCanaryContext;
 import com.squareup.leakcanary.LeakCanary;
 import com.squareup.leakcanary.RefWatcher;
 
@@ -14,6 +16,7 @@ public class App extends Application {
     public void onCreate() {
         super.onCreate();
         mRefWatcher = setupLeakCanary();
+        BlockCanary.install(this,new BlockCanaryContext()).start();
     }
 
     private RefWatcher setupLeakCanary(){
