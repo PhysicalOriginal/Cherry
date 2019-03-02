@@ -21,7 +21,7 @@ public class MainActivity extends AppCompatActivity {
         //todo 屏幕反复1旋转出现了bug
         lockView.setVerifyMode(LockView.VerifyMode.NORMAL);
         lockView.setColorWrong(getResources().getColor(R.color.colorPrimaryDark));
-//        lockView.setDotSelectedAnimDuration(1000);
+        lockView.setDotSelectedAnimDuration(1000);
         lockView.setCorrectColor(getResources().getColor(R.color.colorAccent));
         lockView.setLockViewListener(new LockView.LockViewListener() {
             @Override
