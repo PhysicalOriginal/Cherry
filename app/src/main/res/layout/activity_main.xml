@@ -27,7 +27,7 @@
             android:layout_marginEnd="8dp"
             android:padding="20dp"
             app:dotCount="3"
-            app:dotNormalSize="20dp"
+            app:dotNormalSize="10dp"
             app:dotSelectedAnimDuration="15000"
             app:dotSelectedSize="10dp"
             app:layout_constraintBottom_toBottomOf="parent"

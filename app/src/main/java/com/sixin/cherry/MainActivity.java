@@ -22,6 +22,7 @@ public class MainActivity extends AppCompatActivity {
         lockView.setVerifyMode(LockView.VerifyMode.NORMAL);
         lockView.setColorWrong(getResources().getColor(R.color.colorPrimaryDark));
         lockView.setDotSelectedAnimDuration(1000);
+//        lockView.setDotSelectedSize(dip2px(getResources().getDimension(R.dimen.dp_10)));
         lockView.setCorrectColor(getResources().getColor(R.color.colorAccent));
         lockView.setLockViewListener(new LockView.LockViewListener() {
             @Override
@@ -40,12 +41,13 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onComplete(int[] result) {
-                for (int i = 0; i < result.length; i++) {
-                    Log.d(TAG, "onComplete:"+result[i]);
-                }
+//                for (int i = 0; i < result.length; i++) {
+//                    Log.d(TAG, "onComplete:"+result[i]);
+//                }
 //                lockView.setVerifyMode(LockView.VerifyMode.CORRECT);
 //                lockView.setDotNormalSize(dip2px(getResources().getDimension(R.dimen.dp_15)));
 //                lockView.setDotSelectedAnimDuration(1000);
+//                lockView.setDotSelectedSize(dip2px(getResources().getDimension(R.dimen.dp_10)));
             }
 
             @Override
@@ -62,7 +64,8 @@ public class MainActivity extends AppCompatActivity {
 //                lockView.setNormalColor(getResources().getColor(R.color.ColorWrong));
 //                lockView.setDotNormalSize(dip2px(getResources().getDimension(R.dimen.dp_15)));
 //                lockView.setCorrectColor(getResources().getColor(R.color.colorPrimaryDark));
-                lockView.setDotSelectedAnimDuration(1000);
+//                lockView.setDotSelectedAnimDuration(1000);
+                lockView.setDotSelectedSize(dip2px(getResources().getDimension(R.dimen.dp_10)));
             }
         });
     }
