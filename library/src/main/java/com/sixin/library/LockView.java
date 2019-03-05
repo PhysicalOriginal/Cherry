@@ -205,7 +205,6 @@ public class LockView extends View {
         mLinePaint.setStrokeJoin(Paint.Join.ROUND);
         mLinePaint.setStrokeCap(Paint.Cap.ROUND);
         mLinePaint.setColor(mNormalColor);
-        mLinePaint.setStrokeWidth(mPathWidth);
 
         mTouchedDots = new ArrayList<>();
     }
@@ -213,6 +212,7 @@ public class LockView extends View {
     @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
+        mLinePaint.setStrokeWidth(mPathWidth);
         initDots();
         configDotDown();
     }
@@ -326,6 +326,24 @@ public class LockView extends View {
 
     public void setDotSelectedAnimDuration(int dotSelectedAnimDuration) {
         this.mDotSelectedAnimDuration = dotSelectedAnimDuration;
+    }
+
+    public int getPathWidth() {
+        return mPathWidth;
+    }
+
+    public void setPathWidth(int pathWidth) {
+        this.mPathWidth = pathWidth;
+        mLinePaint.setStrokeWidth(mPathWidth);
+        invalidate();
+    }
+
+    public boolean isFeedbackEnabled() {
+        return mFeedbackEnabled;
+    }
+
+    public void setFeedbackEnabled(boolean feedbackEnabled) {
+        this.mFeedbackEnabled = feedbackEnabled;
     }
 
     public LockViewListener getLockViewListener() {
@@ -671,7 +689,7 @@ public class LockView extends View {
         return new SavedState(parcelable,mDotCount
                 ,mTouchedDots,mInvalidatePath,mVerifyMode,mNormalColor
                 ,mCorrectColor,mDotNormalSize,mDotSelectedAnimDuration
-                ,mDotSelectedSize);
+                ,mDotSelectedSize,mPathWidth,mFeedbackEnabled);
     }
 
     @Override
@@ -688,6 +706,8 @@ public class LockView extends View {
         mDotNormalSize = savedState.getDotNormalSize();
         mDotSelectedAnimDuration = savedState.getAnimDuration();
         mDotSelectedSize = savedState.getDotSelectedSize();
+        mPathWidth = savedState.getPathWidth();
+        mFeedbackEnabled = savedState.isFeedbackEnabled();
     }
 
     private void configDotDown() {
@@ -934,11 +954,13 @@ public class LockView extends View {
         private int dotNormalSize;
         private int animDuration;
         private int dotSelectedSize;
+        private int pathWidth;
+        private boolean feedbackEnabled;
 
         private SavedState(Parcelable source,int dotCount,List<Dot> touchedDots
                 ,boolean invalidatePath,int verifyMode,int normalColor
                 ,int correctColor,int dotNormalSize,int animDuration
-                ,int dotSelectedSize) {
+                ,int dotSelectedSize,int pathWidth,boolean feedbackEnabled) {
             super(source);
             this.dotCount = dotCount;
             this.touchedDots.addAll(touchedDots);
@@ -949,6 +971,8 @@ public class LockView extends View {
             this.dotNormalSize = dotNormalSize;
             this.animDuration = animDuration;
             this.dotSelectedSize = dotSelectedSize;
+            this.pathWidth = pathWidth;
+            this.feedbackEnabled = feedbackEnabled;
         }
 
         private SavedState(Parcel source) {
@@ -962,6 +986,8 @@ public class LockView extends View {
             this.dotNormalSize = source.readInt();
             this.animDuration = source.readInt();
             this.dotSelectedSize = source.readInt();
+            this.pathWidth = source.readInt();
+            this.feedbackEnabled = source.readByte() != 0;
         }
 
         private int getDotCount() {
@@ -1000,6 +1026,14 @@ public class LockView extends View {
             return dotSelectedSize;
         }
 
+        private int getPathWidth() {
+            return pathWidth;
+        }
+
+        private boolean isFeedbackEnabled() {
+            return feedbackEnabled;
+        }
+
         @Override
         public void writeToParcel(Parcel out, int flags) {
             super.writeToParcel(out, flags);
@@ -1012,6 +1046,8 @@ public class LockView extends View {
             out.writeInt(dotNormalSize);
             out.writeInt(animDuration);
             out.writeInt(dotSelectedSize);
+            out.writeInt(pathWidth);
+            out.writeByte(this.feedbackEnabled?(byte)1:(byte)0);
         }
 
         public static final Parcelable.Creator<SavedState> CREATOR = new Creator<SavedState>() {

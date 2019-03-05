@@ -22,6 +22,7 @@ public class MainActivity extends AppCompatActivity {
         lockView.setVerifyMode(LockView.VerifyMode.NORMAL);
         lockView.setColorWrong(getResources().getColor(R.color.colorPrimaryDark));
         lockView.setDotSelectedAnimDuration(1000);
+//        lockView.setPathWidth(dip2px(getResources().getDimension(R.dimen.dp_10)));
 //        lockView.setDotSelectedSize(dip2px(getResources().getDimension(R.dimen.dp_10)));
         lockView.setCorrectColor(getResources().getColor(R.color.colorAccent));
         lockView.setLockViewListener(new LockView.LockViewListener() {
@@ -30,6 +31,8 @@ public class MainActivity extends AppCompatActivity {
 //                Log.d(TAG, "onStart:" + dotValue);
 //                lockView.setVerifyMode(LockView.VerifyMode.WRONG);
 //                  lockView.setDotSelectedAnimDuration(1000);
+//                lockView.setPathWidth(dip2px(getResources().getDimension(R.dimen.dp_10)));
+//                lockView.setFeedbackEnabled(false);
             }
 
             @Override
@@ -37,6 +40,8 @@ public class MainActivity extends AppCompatActivity {
 //                Log.d(TAG, "onProgress:" + progressValue);
 //                lockView.setVerifyMode(LockView.VerifyMode.WRONG);
 //                lockView.setDotSelectedAnimDuration(1000);
+//                lockView.setPathWidth(dip2px(getResources().getDimension(R.dimen.dp_10)));
+//                lockView.setFeedbackEnabled(false);
             }
 
             @Override
@@ -48,6 +53,8 @@ public class MainActivity extends AppCompatActivity {
 //                lockView.setDotNormalSize(dip2px(getResources().getDimension(R.dimen.dp_15)));
 //                lockView.setDotSelectedAnimDuration(1000);
 //                lockView.setDotSelectedSize(dip2px(getResources().getDimension(R.dimen.dp_10)));
+//                lockView.setPathWidth(-1000);
+//                lockView.setFeedbackEnabled(false);
             }
 
             @Override
@@ -65,7 +72,9 @@ public class MainActivity extends AppCompatActivity {
 //                lockView.setDotNormalSize(dip2px(getResources().getDimension(R.dimen.dp_15)));
 //                lockView.setCorrectColor(getResources().getColor(R.color.colorPrimaryDark));
 //                lockView.setDotSelectedAnimDuration(1000);
-                lockView.setDotSelectedSize(dip2px(getResources().getDimension(R.dimen.dp_10)));
+//                lockView.setDotSelectedSize(dip2px(getResources().getDimension(R.dimen.dp_10)));
+//                lockView.setPathWidth(dip2px(getResources().getDimension(R.dimen.dp_10)));
+//                lockView.setFeedbackEnabled(false);
             }
         });
     }
