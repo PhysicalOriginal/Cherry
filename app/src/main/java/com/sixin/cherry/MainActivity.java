@@ -22,6 +22,7 @@ public class MainActivity extends AppCompatActivity {
         lockView.setVerifyMode(LockView.VerifyMode.NORMAL);
         lockView.setColorWrong(getResources().getColor(R.color.colorPrimaryDark));
         lockView.setDotSelectedAnimDuration(1000);
+        lockView.setFeedbackEnabled(false);
 //        lockView.setPathWidth(dip2px(getResources().getDimension(R.dimen.dp_10)));
 //        lockView.setDotSelectedSize(dip2px(getResources().getDimension(R.dimen.dp_10)));
         lockView.setCorrectColor(getResources().getColor(R.color.colorAccent));
