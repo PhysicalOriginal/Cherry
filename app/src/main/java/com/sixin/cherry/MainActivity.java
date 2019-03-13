@@ -8,6 +8,7 @@ import android.view.View;
 import android.widget.Button;
 
 import com.sixin.library.LockView;
+import com.sixin.library.listener.LockViewListener;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -22,18 +23,18 @@ public class MainActivity extends AppCompatActivity {
         lockView.setVerifyMode(LockView.VerifyMode.NORMAL);
         lockView.setColorWrong(getResources().getColor(R.color.colorPrimaryDark));
         lockView.setDotSelectedAnimDuration(1000);
-        lockView.setFeedbackEnabled(false);
+//        lockView.setFeedbackEnabled(false);
 //        lockView.setPathWidth(dip2px(getResources().getDimension(R.dimen.dp_10)));
 //        lockView.setDotSelectedSize(dip2px(getResources().getDimension(R.dimen.dp_10)));
         lockView.setCorrectColor(getResources().getColor(R.color.colorAccent));
-        lockView.setLockViewListener(new LockView.LockViewListener() {
+        lockView.setLockViewListener(new LockViewListener() {
             @Override
             public void onStart(int dotValue) {
 //                Log.d(TAG, "onStart:" + dotValue);
 //                lockView.setVerifyMode(LockView.VerifyMode.WRONG);
 //                  lockView.setDotSelectedAnimDuration(1000);
 //                lockView.setPathWidth(dip2px(getResources().getDimension(R.dimen.dp_10)));
-//                lockView.setFeedbackEnabled(false);
+                lockView.setFeedbackEnabled(false);
             }
 
             @Override
@@ -50,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
 //                for (int i = 0; i < result.length; i++) {
 //                    Log.d(TAG, "onComplete:"+result[i]);
 //                }
-//                lockView.setVerifyMode(LockView.VerifyMode.CORRECT);
+                lockView.setVerifyMode(LockView.VerifyMode.CORRECT);
 //                lockView.setDotNormalSize(dip2px(getResources().getDimension(R.dimen.dp_15)));
 //                lockView.setDotSelectedAnimDuration(1000);
 //                lockView.setDotSelectedSize(dip2px(getResources().getDimension(R.dimen.dp_10)));
@@ -70,8 +71,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 //                lockView.setNormalColor(getResources().getColor(R.color.ColorWrong));
-//                lockView.setDotNormalSize(dip2px(getResources().getDimension(R.dimen.dp_15)));
-//                lockView.setCorrectColor(getResources().getColor(R.color.colorPrimaryDark));
+                lockView.setDotNormalSize(dip2px(getResources().getDimension(R.dimen.dp_15)));
+                lockView.setCorrectColor(getResources().getColor(R.color.colorPrimaryDark));
 //                lockView.setDotSelectedAnimDuration(1000);
 //                lockView.setDotSelectedSize(dip2px(getResources().getDimension(R.dimen.dp_10)));
 //                lockView.setPathWidth(dip2px(getResources().getDimension(R.dimen.dp_10)));
